@@ -2,42 +2,65 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Painel Administrativo Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Correção para o seletor de hora não ser cortado no Android */
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            display: block;
+            background: transparent;
+            bottom: 0;
+            color: transparent;
+            cursor: pointer;
+            height: auto;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: auto;
+        }
+        /* Força um padding extra interno nos inputs de hora para garantir que o clique abra o relógio centralizado */
+        input[type="time"] {
+            position: relative;
+            padding-right: 40px !important;
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-100 p-4">
-    <div class="max-w-3xl mx-auto space-y-6">
+<body class="bg-gray-950 text-gray-100 p-4 pb-12 antialiased">
+    <div class="max-w-3xl mx-auto space-y-8">
         
-        <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl">
-            <h2 class="text-xl font-bold text-green-400 mb-4 flex items-center">
-                <span class="mr-2">👤</span> Cadastrar Coroinha
+        <div class="bg-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl">
+            <h2 class="text-xl font-bold text-green-400 mb-5 flex items-center">
+                <span class="mr-3">👤</span> Cadastrar Coroinha
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input type="text" id="cadNome" placeholder="Nome Completo" class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none focus:border-green-500 text-white">
-                <select id="cadCat" class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none text-white">
+                <input type="text" id="cadNome" placeholder="Nome Completo" class="bg-gray-800 border border-gray-700 p-4 rounded-xl outline-none focus:border-green-500 text-white w-full">
+                <select id="cadCat" class="bg-gray-800 border border-gray-700 p-4 rounded-xl outline-none text-white w-full">
                     <option value="Acólito">Acólito</option>
                     <option value="Veterano">Veterano</option>
                     <option value="Médio">Médio</option>
                     <option value="Novato">Novato</option>
                 </select>
-                <button onclick="cadastrarMembro()" id="btnCad" class="bg-green-600 hover:bg-green-700 font-bold py-3 rounded-xl transition-all shadow-lg">Salvar</button>
+                <button onclick="cadastrarMembro()" id="btnCad" class="bg-green-600 hover:bg-green-700 font-bold py-4 rounded-xl transition-all shadow-lg text-white w-full">Salvar</button>
             </div>
         </div>
 
-        <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl border-l-4 border-l-yellow-500">
-            <h2 class="text-xl font-bold text-yellow-400 mb-4">📅 Programar Missas do Mês</h2>
-            <p class="text-xs text-gray-400 mb-4 text-pretty">O sistema calculará a data exata do mês atual baseada na sua escolha.</p>
+        <div class="bg-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl border-l-4 border-l-yellow-500">
+            <h2 class="text-xl font-bold text-yellow-400 mb-3 flex items-center">
+                <span class="mr-3">📅</span> Programar Missas do Mês
+            </h2>
+            <p class="text-xs text-gray-500 mb-6">O sistema calculará a data exata do mês atual baseada na sua escolha.</p>
             
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                <select id="posicaoSemana" class="p-3 bg-gray-700 rounded-xl border border-gray-600 text-white">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <select id="posicaoSemana" class="p-4 bg-gray-800 rounded-xl border border-gray-700 text-white w-full">
                     <option value="1">1º</option>
                     <option value="2">2º</option>
                     <option value="3">3º</option>
                     <option value="4">4º</option>
                     <option value="5">5º</option>
                 </select>
-                <select id="diaSemana" class="p-3 bg-gray-700 rounded-xl border border-gray-600 text-white">
+                <select id="diaSemana" class="p-4 bg-gray-800 rounded-xl border border-gray-700 text-white w-full">
                     <option value="0">Domingo</option>
                     <option value="1">Segunda</option>
                     <option value="2">Terça</option>
@@ -46,42 +69,47 @@
                     <option value="5">Sexta</option>
                     <option value="6">Sábado</option>
                 </select>
-                <input type="time" id="novaHoraMissa" class="p-3 bg-gray-700 rounded-xl border border-gray-600 text-white">
-                <button onclick="addMissaAutomatica()" id="btnAddMissa" class="bg-yellow-600 hover:bg-yellow-700 font-bold rounded-xl shadow-lg">Liberar</button>
             </div>
 
-            <div class="border-t border-gray-700 pt-4">
-                <h3 class="text-xs font-bold text-gray-400 mb-3 uppercase">Missas Ativas:</h3>
-                <div id="listaRemover" class="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto text-xs">
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <input type="time" id="novaHoraMissa" class="p-4 pr-10 bg-gray-800 rounded-xl border border-gray-700 text-white w-full time-input-fix">
+                <button onclick="addMissaAutomatica()" id="btnAddMissa" class="bg-yellow-600 hover:bg-yellow-700 font-bold rounded-xl shadow-lg text-white w-full h-full flex items-center justify-center">Liberar</button>
+            </div>
+
+            <div class="border-t border-gray-800 pt-5">
+                <h3 class="text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">Missas Ativas:</h3>
+                <div id="listaRemover" class="grid grid-cols-1 gap-3 max-h-48 overflow-y-auto text-xs">
                     </div>
             </div>
         </div>
 
-        <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl">
-            <h2 class="text-xl font-bold text-blue-400 mb-6">🛠️ Gerar Escala do Dia</h2>
-            <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
+        <div class="bg-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl">
+            <h2 class="text-xl font-bold text-blue-400 mb-8 flex items-center">
+                <span class="mr-3">🛠️</span> Gerar Escala do Dia
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8 text-sm">
                 <div>
-                    <label class="text-gray-500 block mb-1">Data da Missa:</label>
-                    <input type="date" id="dataEscala" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white">
+                    <label class="text-gray-600 block mb-2 font-medium">Data da Missa:</label>
+                    <input type="date" id="dataEscala" class="w-full p-4 bg-gray-800 border border-gray-700 rounded-xl text-white outline-none focus:border-blue-500">
                 </div>
                 <div>
-                    <label class="text-gray-500 block mb-1">Horário:</label>
-                    <input type="time" id="horaEscala" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white">
+                    <label class="text-gray-600 block mb-2 font-medium">Horário:</label>
+                    <input type="time" id="horaEscala" class="w-full p-4 pr-10 bg-gray-800 border border-gray-700 rounded-xl text-white outline-none focus:border-blue-500 time-input-fix">
                 </div>
             </div>
-            <button onclick="gerarEscala()" id="btnGerar" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-4 rounded-2xl mb-6 shadow-lg">Sortear Disponíveis</button>
+            <button onclick="gerarEscala()" id="btnGerar" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-5 rounded-2xl mb-8 shadow-lg text-white text-lg transition-all">Sortear Disponíveis</button>
             
-            <div id="resultadoEscala" class="hidden space-y-4">
-                <div id="listaFinal" class="bg-gray-700 p-5 rounded-2xl border border-blue-500/30 text-sm space-y-4"></div>
-                <textarea id="obs" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl h-20 text-white outline-none" placeholder="Observações..."></textarea>
-                <button onclick="enviarWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 font-bold py-4 rounded-2xl flex items-center justify-center transition-all shadow-lg text-white">
-                    <span class="mr-2">💬</span> Enviar Escala no WhatsApp
+            <div id="resultadoEscala" class="hidden space-y-5">
+                <div id="listaFinal" class="bg-gray-800 p-6 rounded-2xl border border-blue-900/50 text-sm space-y-5 shadow-inner"></div>
+                <textarea id="obs" class="w-full p-4 bg-gray-800 border border-gray-700 rounded-xl h-24 text-white outline-none focus:border-emerald-500" placeholder="Observações para o WhatsApp..."></textarea>
+                <button onclick="enviarWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 font-bold py-5 rounded-2xl flex items-center justify-center transition-all shadow-lg text-white text-lg">
+                    <span class="mr-3">💬</span> Enviar Escala no WhatsApp
                 </button>
             </div>
         </div>
 
-        <div class="text-center pb-10">
-            <button onclick="limparDados()" class="text-red-500 text-[10px] font-bold uppercase tracking-widest hover:underline">
+        <div class="text-center py-6">
+            <button onclick="limparDados()" class="text-red-600 text-[11px] font-bold uppercase tracking-widest hover:text-red-400 hover:underline transition-all">
                 ⚠️ Resetar Disponibilidades do Mês
             </button>
         </div>
@@ -90,7 +118,7 @@
     <script>
         const API = "https://script.google.com/macros/s/AKfycbzyDSWSVz3TiNVB6YxflRpAlRVD6ox6D47T5pJGUWagjGEF9qX_idUOvQe1ZiZjl5ZdOg/exec";
 
-        // --- LÓGICA DE CÁLCULO DE DATA ---
+        // --- LÓGICA DE CÁLCULO DE DATA (Mantida) ---
         function obterDataPelaPosicao(ordem, diaSemana) {
             let d = new Date();
             let mes = d.getMonth();
@@ -114,27 +142,28 @@
             const hora = document.getElementById('novaHoraMissa').value;
             const diaNome = document.getElementById('diaSemana').options[document.getElementById('diaSemana').selectedIndex].text;
             
-            if(!hora) return alert("Preencha a hora!");
+            if(!hora) return alert("Por favor, selecione o horário da missa!");
 
             const dataCalculada = obterDataPelaPosicao(ordem, diaIdx);
-            if(!dataCalculada) return alert("Esta ocorrência não existe no mês atual!");
+            if(!dataCalculada) return alert("Esta ocorrência (ex: 5º domingo) não existe no mês atual!");
 
             const labelMissa = `${ordem}º ${diaNome} (${dataCalculada})`;
             
-            document.getElementById('btnAddMissa').innerText = "...";
+            document.getElementById('btnAddMissa').innerText = "Salvando...";
             await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "cadastrarMissa", dataMissa: labelMissa, horaMissa: hora}) });
             
-            alert(`Liberado: ${labelMissa}`);
+            alert(`Missa liberada com sucesso: ${labelMissa}`);
             location.reload();
         }
 
-        // --- FUNÇÕES COMPLEMENTARES ---
+        // --- FUNÇÕES COMPLEMENTARES (Mantidas) ---
         async function cadastrarMembro() {
             const nome = document.getElementById('cadNome').value.trim();
             const cat = document.getElementById('cadCat').value;
-            if(!nome) return alert("Nome vazio!");
+            if(!nome) return alert("Por favor, digite o nome completo do coroinha!");
+            document.getElementById('btnCad').innerText = "...";
             await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "cadastrarMembro", nome, cat }) });
-            alert("Salvo!");
+            alert("Coroinha cadastrado!");
             location.reload();
         }
 
@@ -143,17 +172,18 @@
             const data = await resp.json();
             let html = "";
             data.config.datas.forEach((d, i) => {
-                html += `<div class="flex justify-between bg-gray-700/50 p-2 rounded-lg border border-gray-600 mb-1">
-                    <span>${d} - ${data.config.horas[i]}h</span>
-                    <button onclick="removerMissa('${d}', '${data.config.horas[i]}')" class="text-red-500 font-bold ml-2">Excluir</button>
+                html += `<div class="flex justify-between items-center bg-gray-800/60 p-3 rounded-xl border border-gray-700 mb-2 shadow-sm">
+                    <span class="font-medium">${d} - ${data.config.horas[i]}h</span>
+                    <button onclick="removerMissa('${d}', '${data.config.horas[i]}')" class="text-red-500 font-bold ml-4 p-1 hover:text-red-300">Excluir</button>
                 </div>`;
             });
-            document.getElementById('listaRemover').innerHTML = html || "Sem missas.";
+            document.getElementById('listaRemover').innerHTML = html || "<p class='text-gray-600 text-center py-4'>Nenhuma missa ativa no momento.</p>";
         }
 
         async function removerMissa(data, hora) {
-            if(confirm("Remover?")) {
+            if(confirm(`Deseja realmente remover a missa de ${data} às ${hora}h?`)) {
                 await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "removerMissa", dataMissa: data, horaMissa: hora}) });
+                alert("Missa removida!");
                 location.reload();
             }
         }
@@ -161,19 +191,19 @@
         async function gerarEscala() {
             const dRaw = document.getElementById('dataEscala').value;
             const h = document.getElementById('horaEscala').value;
-            if(!dRaw || !h) return alert("Selecione data/hora!");
+            if(!dRaw || !h) return alert("Selecione a data e o horário para gerar a escala!");
             const d = dRaw.split("-");
             const dFmt = `${d[2]}/${d[1]}/${d[0]}`;
             
-            document.getElementById('btnGerar').innerText = "Sorteando...";
+            document.getElementById('btnGerar').innerText = "Sorteando voluntários...";
             const resp = await fetch(API, { method: 'POST', body: JSON.stringify({ action: "gerarEscala", dataMissa: dFmt, horaMissa: h }) });
             const escala = await resp.json();
 
             let html = "";
             const cats = { "Acólitos": escala.acolitos, "Veteranos": escala.veteranos, "Médios": escala.medios, "Novatos": escala.novatos };
             for (const [l, p] of Object.entries(cats)) {
-                html += `<div><label class="text-[10px] font-bold text-gray-500 uppercase">${l}</label>
-                <input type="text" class="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white escala-input" data-cat="${l}" value="${p.map(x=>x.nome).join(', ')}"></div>`;
+                html += `<div><label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">${l}</label>
+                <input type="text" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white escala-input outline-none focus:border-blue-500" data-cat="${l}" value="${p.map(x=>x.nome).join(', ')}" placeholder="Nenhum voluntário desta categoria"></div>`;
             }
             document.getElementById('listaFinal').innerHTML = html;
             document.getElementById('resultadoEscala').classList.remove('hidden');
@@ -185,16 +215,16 @@
             const dFmt = `${dRaw[2]}/${dRaw[1]}/${dRaw[0]}`;
             const h = document.getElementById('horaEscala').value;
             let txt = `*ESCALA DE COROINHAS*\n📅 ${dFmt} | ⏰ ${h}h\n\n`;
-            document.querySelectorAll('.escala-input').forEach(i => { txt += `*${i.dataset.cat}:* ${i.value || '---'}\n`; });
-            const obs = document.getElementById('obs').value;
+            document.querySelectorAll('.escala-input').forEach(i => { txt += `*${i.dataset.cat}:* ${i.value.trim() || '---'}\n`; });
+            const obs = document.getElementById('obs').value.trim();
             if(obs) txt += `\n⚠️ *Obs:* ${obs}`;
             window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
         }
 
         async function limparDados() {
-            if(confirm("Zerar disponibilidades?")) {
+            if(confirm("⚠️ ATENÇÃO: Isso apagará TODAS as disponibilidades marcadas pelos coroinhas neste mês. Deseja continuar?")) {
                 await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "limparDisponibilidade"}) });
-                alert("Limpo!");
+                alert("Dados limpos para o novo mês!");
             }
         }
 
