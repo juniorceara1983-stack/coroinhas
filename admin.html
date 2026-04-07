@@ -26,34 +26,53 @@
         </div>
 
         <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl border-l-4 border-l-yellow-500">
-            <h2 class="text-xl font-bold text-yellow-400 mb-4">📅 Gestão de Missas</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <input type="text" id="tipoMissa" placeholder="Ex: 1º Domingo" class="p-3 bg-gray-700 rounded-xl border border-gray-600 text-white">
-                <div class="flex gap-2">
-                    <input type="date" id="novaDataMissa" class="flex-1 p-3 bg-gray-700 rounded-xl border border-gray-600 text-white">
-                    <input type="time" id="novaHoraMissa" class="p-3 bg-gray-700 rounded-xl border border-gray-600 text-white">
-                </div>
+            <h2 class="text-xl font-bold text-yellow-400 mb-4">📅 Programar Missas do Mês</h2>
+            <p class="text-xs text-gray-400 mb-4 text-pretty">O sistema calculará a data exata do mês atual baseada na sua escolha.</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                <select id="posicaoSemana" class="p-3 bg-gray-700 rounded-xl border border-gray-600 text-white">
+                    <option value="1">1º</option>
+                    <option value="2">2º</option>
+                    <option value="3">3º</option>
+                    <option value="4">4º</option>
+                    <option value="5">5º</option>
+                </select>
+                <select id="diaSemana" class="p-3 bg-gray-700 rounded-xl border border-gray-600 text-white">
+                    <option value="0">Domingo</option>
+                    <option value="1">Segunda</option>
+                    <option value="2">Terça</option>
+                    <option value="3">Quarta</option>
+                    <option value="4">Quinta</option>
+                    <option value="5">Sexta</option>
+                    <option value="6">Sábado</option>
+                </select>
+                <input type="time" id="novaHoraMissa" class="p-3 bg-gray-700 rounded-xl border border-gray-600 text-white">
+                <button onclick="addMissaAutomatica()" id="btnAddMissa" class="bg-yellow-600 hover:bg-yellow-700 font-bold rounded-xl shadow-lg">Liberar</button>
             </div>
-            <button onclick="addMissa()" id="btnAddMissa" class="w-full bg-yellow-600 hover:bg-yellow-700 font-bold py-3 rounded-xl mb-6">Liberar no App</button>
 
             <div class="border-t border-gray-700 pt-4">
-                <h3 class="text-xs font-bold text-gray-400 mb-3 uppercase">Missas Ativas (Toque para remover):</h3>
-                <div id="listaRemover" class="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
+                <h3 class="text-xs font-bold text-gray-400 mb-3 uppercase">Missas Ativas:</h3>
+                <div id="listaRemover" class="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto text-xs">
                     </div>
             </div>
         </div>
 
         <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl">
             <h2 class="text-xl font-bold text-blue-400 mb-6">🛠️ Gerar Escala do Dia</h2>
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <input type="date" id="dataEscala" class="p-3 bg-gray-700 border border-gray-600 rounded-xl text-white">
-                <input type="time" id="horaEscala" class="p-3 bg-gray-700 border border-gray-600 rounded-xl text-white">
+            <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
+                <div>
+                    <label class="text-gray-500 block mb-1">Data da Missa:</label>
+                    <input type="date" id="dataEscala" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white">
+                </div>
+                <div>
+                    <label class="text-gray-500 block mb-1">Horário:</label>
+                    <input type="time" id="horaEscala" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white">
+                </div>
             </div>
             <button onclick="gerarEscala()" id="btnGerar" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-4 rounded-2xl mb-6 shadow-lg">Sortear Disponíveis</button>
             
             <div id="resultadoEscala" class="hidden space-y-4">
-                <div id="listaFinal" class="bg-gray-700 p-5 rounded-2xl border border-blue-500/30 text-sm space-y-4">
-                    </div>
+                <div id="listaFinal" class="bg-gray-700 p-5 rounded-2xl border border-blue-500/30 text-sm space-y-4"></div>
                 <textarea id="obs" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl h-20 text-white outline-none" placeholder="Observações..."></textarea>
                 <button onclick="enviarWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 font-bold py-4 rounded-2xl flex items-center justify-center transition-all shadow-lg text-white">
                     <span class="mr-2">💬</span> Enviar Escala no WhatsApp
@@ -61,9 +80,9 @@
             </div>
         </div>
 
-        <div class="bg-gray-900 p-4 rounded-2xl border border-red-900/50 text-center">
-            <button onclick="limparDados()" class="text-red-500 text-xs font-bold uppercase tracking-widest hover:text-red-400">
-                ⚠️ Limpar Disponibilidades do Mês
+        <div class="text-center pb-10">
+            <button onclick="limparDados()" class="text-red-500 text-[10px] font-bold uppercase tracking-widest hover:underline">
+                ⚠️ Resetar Disponibilidades do Mês
             </button>
         </div>
     </div>
@@ -71,35 +90,51 @@
     <script>
         const API = "https://script.google.com/macros/s/AKfycbzyDSWSVz3TiNVB6YxflRpAlRVD6ox6D47T5pJGUWagjGEF9qX_idUOvQe1ZiZjl5ZdOg/exec";
 
-        // --- FUNÇÕES DE CADASTRO ---
+        // --- LÓGICA DE CÁLCULO DE DATA ---
+        function obterDataPelaPosicao(ordem, diaSemana) {
+            let d = new Date();
+            let mes = d.getMonth();
+            let ano = d.getFullYear();
+            let dataArr = new Date(ano, mes, 1);
+            let count = 0;
+            
+            while (dataArr.getMonth() === mes) {
+                if (dataArr.getDay() == diaSemana) {
+                    count++;
+                    if (count == ordem) return dataArr.toLocaleDateString('pt-BR');
+                }
+                dataArr.setDate(dataArr.getDate() + 1);
+            }
+            return null;
+        }
+
+        async function addMissaAutomatica() {
+            const ordem = document.getElementById('posicaoSemana').value;
+            const diaIdx = document.getElementById('diaSemana').value;
+            const hora = document.getElementById('novaHoraMissa').value;
+            const diaNome = document.getElementById('diaSemana').options[document.getElementById('diaSemana').selectedIndex].text;
+            
+            if(!hora) return alert("Preencha a hora!");
+
+            const dataCalculada = obterDataPelaPosicao(ordem, diaIdx);
+            if(!dataCalculada) return alert("Esta ocorrência não existe no mês atual!");
+
+            const labelMissa = `${ordem}º ${diaNome} (${dataCalculada})`;
+            
+            document.getElementById('btnAddMissa').innerText = "...";
+            await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "cadastrarMissa", dataMissa: labelMissa, horaMissa: hora}) });
+            
+            alert(`Liberado: ${labelMissa}`);
+            location.reload();
+        }
+
+        // --- FUNÇÕES COMPLEMENTARES ---
         async function cadastrarMembro() {
             const nome = document.getElementById('cadNome').value.trim();
             const cat = document.getElementById('cadCat').value;
-            if(!nome) return alert("Digite o nome!");
-            document.getElementById('btnCad').innerText = "...";
+            if(!nome) return alert("Nome vazio!");
             await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "cadastrarMembro", nome, cat }) });
-            alert("Coroinha Salvo!");
-            document.getElementById('cadNome').value = "";
-            document.getElementById('btnCad').innerText = "Salvar";
-        }
-
-        // --- GESTÃO DE MISSAS ---
-        async function addMissa() {
-            const tipo = document.getElementById('tipoMissa').value;
-            const dataRaw = document.getElementById('novaDataMissa').value;
-            const hora = document.getElementById('novaHoraMissa').value;
-            if(!dataRaw || !hora) return alert("Preencha tudo!");
-            const d = dataRaw.split("-");
-            const dataFmt = tipo ? `${tipo} (${d[2]}/${d[1]})` : `${d[2]}/${d[1]}/${d[0]}`;
-            document.getElementById('btnAddMissa').innerText = "...";
-            await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "cadastrarMissa", dataMissa: dataFmt, horaMissa: hora}) });
-            alert("Missa Liberada!");
-            location.reload(); 
-        }
-
-        async function removerMissa(data, hora) {
-            if(!confirm("Remover esta missa?")) return;
-            await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "removerMissa", dataMissa: data, horaMissa: hora}) });
+            alert("Salvo!");
             location.reload();
         }
 
@@ -108,32 +143,37 @@
             const data = await resp.json();
             let html = "";
             data.config.datas.forEach((d, i) => {
-                const h = data.config.horas[i];
-                html += `<div class="flex justify-between items-center bg-gray-700/50 p-2 rounded-lg text-xs border border-gray-600">
-                    <span>${d} - ${h}h</span>
-                    <button onclick="removerMissa('${d}', '${h}')" class="text-red-500 font-bold">Excluir</button>
+                html += `<div class="flex justify-between bg-gray-700/50 p-2 rounded-lg border border-gray-600 mb-1">
+                    <span>${d} - ${data.config.horas[i]}h</span>
+                    <button onclick="removerMissa('${d}', '${data.config.horas[i]}')" class="text-red-500 font-bold ml-2">Excluir</button>
                 </div>`;
             });
-            document.getElementById('listaRemover').innerHTML = html || "Nenhuma missa ativa.";
+            document.getElementById('listaRemover').innerHTML = html || "Sem missas.";
         }
 
-        // --- ESCALA E WHATSAPP ---
+        async function removerMissa(data, hora) {
+            if(confirm("Remover?")) {
+                await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "removerMissa", dataMissa: data, horaMissa: hora}) });
+                location.reload();
+            }
+        }
+
         async function gerarEscala() {
-            const dataRaw = document.getElementById('dataEscala').value;
-            const hora = document.getElementById('horaEscala').value;
-            if(!dataRaw || !hora) return alert("Selecione data/hora!");
-            const d = dataRaw.split("-");
-            const dataFmt = `${d[2]}/${d[1]}/${d[0]}`;
+            const dRaw = document.getElementById('dataEscala').value;
+            const h = document.getElementById('horaEscala').value;
+            if(!dRaw || !h) return alert("Selecione data/hora!");
+            const d = dRaw.split("-");
+            const dFmt = `${d[2]}/${d[1]}/${d[0]}`;
+            
             document.getElementById('btnGerar').innerText = "Sorteando...";
-            const resp = await fetch(API, { method: 'POST', body: JSON.stringify({ action: "gerarEscala", dataMissa: dataFmt, horaMissa: hora }) });
+            const resp = await fetch(API, { method: 'POST', body: JSON.stringify({ action: "gerarEscala", dataMissa: dFmt, horaMissa: h }) });
             const escala = await resp.json();
 
             let html = "";
-            const categorias = { "Acólitos": escala.acolitos, "Veteranos": escala.veteranos, "Médios": escala.medios, "Novatos": escala.novatos };
-            for (const [label, pessoas] of Object.entries(categorias)) {
-                const nomes = pessoas.map(p => p.nome).join(', ');
-                html += `<div><label class="text-xs font-bold text-gray-400 uppercase">${label}</label>
-                <input type="text" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white escala-input" data-cat="${label}" value="${nomes}"></div>`;
+            const cats = { "Acólitos": escala.acolitos, "Veteranos": escala.veteranos, "Médios": escala.medios, "Novatos": escala.novatos };
+            for (const [l, p] of Object.entries(cats)) {
+                html += `<div><label class="text-[10px] font-bold text-gray-500 uppercase">${l}</label>
+                <input type="text" class="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white escala-input" data-cat="${l}" value="${p.map(x=>x.nome).join(', ')}"></div>`;
             }
             document.getElementById('listaFinal').innerHTML = html;
             document.getElementById('resultadoEscala').classList.remove('hidden');
@@ -141,22 +181,20 @@
         }
 
         function enviarWhatsApp() {
-            const dataRaw = document.getElementById('dataEscala').value.split("-");
-            const dataFmt = `${dataRaw[2]}/${dataRaw[1]}/${dataRaw[0]}`;
-            const hora = document.getElementById('horaEscala').value;
-            let texto = `*ESCALA DE COROINHAS*\n📅 ${dataFmt} | ⏰ ${hora}h\n\n`;
-            document.querySelectorAll('.escala-input').forEach(i => {
-                texto += `*${i.dataset.cat}:* ${i.value || '---'}\n`;
-            });
+            const dRaw = document.getElementById('dataEscala').value.split("-");
+            const dFmt = `${dRaw[2]}/${dRaw[1]}/${dRaw[0]}`;
+            const h = document.getElementById('horaEscala').value;
+            let txt = `*ESCALA DE COROINHAS*\n📅 ${dFmt} | ⏰ ${h}h\n\n`;
+            document.querySelectorAll('.escala-input').forEach(i => { txt += `*${i.dataset.cat}:* ${i.value || '---'}\n`; });
             const obs = document.getElementById('obs').value;
-            if(obs) texto += `\n⚠️ *Obs:* ${obs}`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
+            if(obs) txt += `\n⚠️ *Obs:* ${obs}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
         }
 
         async function limparDados() {
-            if(confirm("Zerar TODAS as disponibilidades marcadas?")) {
+            if(confirm("Zerar disponibilidades?")) {
                 await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "limparDisponibilidade"}) });
-                alert("Dados Limpos!");
+                alert("Limpo!");
             }
         }
 
