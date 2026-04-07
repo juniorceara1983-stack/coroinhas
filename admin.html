@@ -3,44 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Coordenador</title>
+    <title>Painel Administrativo - Coordenador</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 p-4">
-    <div class="max-w-2xl mx-auto bg-gray-800 rounded-3xl shadow-2xl p-6 border border-gray-700">
-        <h1 class="text-2xl font-bold text-blue-400 mb-6 flex items-center">
-            <span class="mr-2">🛠️</span> Gerador de Escala
-        </h1>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-                <label class="block text-sm font-medium mb-1 text-gray-400">Selecionar Data:</label>
-                <select id="dataMissa" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl outline-none focus:border-blue-500 text-white"></select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1 text-gray-400">Selecionar Horário:</label>
-                <select id="horaMissa" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl outline-none focus:border-blue-500 text-white"></select>
+    <div class="max-w-3xl mx-auto space-y-6">
+        
+        <div class="bg-gray-800 rounded-3xl shadow-2xl p-6 border border-gray-700">
+            <h2 class="text-xl font-bold text-green-400 mb-4 flex items-center">
+                <span class="mr-2">👤</span> Cadastrar Novo Coroinha
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="text" id="cadNome" placeholder="Nome Completo" class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none focus:border-green-500">
+                <select id="cadCat" class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none focus:border-green-500">
+                    <option value="Acólito">Acólito</option>
+                    <option value="Veterano">Veterano</option>
+                    <option value="Médio">Médio</option>
+                    <option value="Novato">Novato</option>
+                </select>
+                <button onclick="cadastrarMembro()" id="btnCad" class="bg-green-600 hover:bg-green-700 font-bold py-3 rounded-xl transition-all">Salvar na Lista</button>
             </div>
         </div>
 
-        <button onclick="gerarEscala()" id="btnGerar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg mb-8">
-            Analisar e Gerar Escala
-        </button>
+        <div class="bg-gray-800 rounded-3xl shadow-2xl p-6 border border-gray-700">
+            <h2 class="text-xl font-bold text-blue-400 mb-6 flex items-center">
+                <span class="mr-2">📅</span> Gerar Escala do Dia
+            </h2>
 
-        <div id="resultadoEscala" class="hidden space-y-6">
-            <div class="bg-gray-700 p-4 rounded-2xl border border-blue-500/30">
-                <h3 class="text-blue-400 font-bold mb-3 flex justify-between italic">Sugestão de Escala</h3>
-                <div id="listaFinal" class="text-sm space-y-2"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Data da Missa:</label>
+                    <select id="dataMissa" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl outline-none focus:border-blue-500 text-white"></select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Horário:</label>
+                    <select id="horaMissa" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl outline-none focus:border-blue-500 text-white"></select>
+                </div>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium mb-1 text-gray-400">Observação:</label>
-                <textarea id="obs" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl h-20 outline-none text-white" placeholder="Ex: Chegar 15 minutos antes..."></textarea>
-            </div>
-
-            <button onclick="enviarWhatsApp()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center transition-all">
-                <span class="mr-2">💬</span> Enviar no WhatsApp
+            <button onclick="gerarEscala()" id="btnGerar" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-4 rounded-2xl shadow-lg mb-6 transition-all">
+                Analisar Disponibilidades e Gerar
             </button>
+
+            <div id="resultadoEscala" class="hidden space-y-4">
+                <div class="bg-gray-700/50 p-4 rounded-2xl border border-blue-500/30">
+                    <div id="listaFinal" class="text-sm space-y-2"></div>
+                </div>
+                <textarea id="obs" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl h-20 outline-none" placeholder="Observações (ex: Reunião após a missa)"></textarea>
+                <button onclick="enviarWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 font-bold py-4 rounded-2xl flex items-center justify-center">
+                    <span class="mr-2">💬</span> Enviar Escala no WhatsApp
+                </button>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <a href="https://docs.google.com/spreadsheets/d/12HFM5p3DpX3eR23W8ER8EIogqKbBzPWnmD_AnF31nIE/edit" target="_blank" class="text-gray-500 text-xs underline">Acessar Planilha Master</a>
         </div>
     </div>
 
@@ -51,19 +68,31 @@
         window.onload = async () => {
             const resp = await fetch(API_URL);
             const config = await resp.json();
-            const comboData = document.getElementById('dataMissa');
-            const comboHora = document.getElementById('horaMissa');
-            
-            comboData.innerHTML = config.config.datas.map(d => `<option value="${d}">${d}</option>`).join('');
-            comboHora.innerHTML = config.config.horas.map(h => `<option value="${h}">${h}</option>`).join('');
+            document.getElementById('dataMissa').innerHTML = config.config.datas.map(d => `<option value="${d}">${d}</option>`).join('');
+            document.getElementById('horaMissa').innerHTML = config.config.horas.map(h => `<option value="${h}">${h}</option>`).join('');
         };
 
+        async function cadastrarMembro() {
+            const nome = document.getElementById('cadNome').value.trim();
+            const cat = document.getElementById('cadCat').value;
+            if(!nome) return alert("Digite o nome!");
+
+            document.getElementById('btnCad').innerText = "Salvando...";
+            await fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ action: "cadastrarMembro", nome, cat })
+            });
+            
+            alert("Coroinha cadastrado com sucesso!");
+            document.getElementById('cadNome').value = "";
+            document.getElementById('btnCad').innerText = "Salvar na Lista";
+        }
+
         async function gerarEscala() {
-            const btn = document.getElementById('btnGerar');
             const data = document.getElementById('dataMissa').value;
             const hora = document.getElementById('horaMissa').value;
-
-            btn.innerText = "Processando...";
+            document.getElementById('btnGerar').innerText = "Sorteando nomes...";
             
             const resp = await fetch(API_URL, {
                 method: 'POST',
@@ -71,33 +100,28 @@
             });
             escalaAtual = await resp.json();
 
-            const lista = document.getElementById('listaFinal');
             let html = "";
-            const categorias = { "Acólitos": escalaAtual.acolitos, "Veteranos": escalaAtual.veteranos, "Médios": escalaAtual.medios, "Novatos": escalaAtual.novatos };
+            const cats = { "Acólitos": escalaAtual.acolitos, "Veteranos": escalaAtual.veteranos, "Médios": escalaAtual.medios, "Novatos": escalaAtual.novatos };
 
-            for (const [label, pessoas] of Object.entries(categorias)) {
-                html += `<div class="border-b border-gray-600 pb-2"><strong>${label}:</strong> `;
-                html += pessoas.length > 0 ? pessoas.map(p => p.nome).join(', ') : '<span class="text-red-400 italic">Sem voluntários</span>';
-                html += `</div>`;
+            for (const [label, pessoas] of Object.entries(cats)) {
+                html += `<div class="border-b border-gray-600 pb-2"><strong>${label}:</strong> ${pessoas.length > 0 ? pessoas.map(p => p.nome).join(', ') : '---'}</div>`;
             }
 
-            lista.innerHTML = html;
+            document.getElementById('listaFinal').innerHTML = html;
             document.getElementById('resultadoEscala').classList.remove('hidden');
-            btn.innerText = "Analisar e Gerar Escala";
+            document.getElementById('btnGerar').innerText = "Analisar Disponibilidades e Gerar";
         }
 
         function enviarWhatsApp() {
             const data = document.getElementById('dataMissa').value;
             const hora = document.getElementById('horaMissa').value;
-            const obs = document.getElementById('obs').value;
-
-            let texto = `*ESCALA DE COROINHAS*\n📅 Data: ${data}\n⏰ Hora: ${hora}h\n\n`;
-            const categorias = { "Acólitos": escalaAtual.acolitos, "Veteranos": escalaAtual.veteranos, "Médios": escalaAtual.medios, "Novatos": escalaAtual.novatos };
-
-            for (const [label, pessoas] of Object.entries(categorias)) {
+            let texto = `*ESCALA DE COROINHAS*\n📅 ${data} | ⏰ ${hora}h\n\n`;
+            
+            const cats = { "Acólitos": escalaAtual.acolitos, "Veteranos": escalaAtual.veteranos, "Médios": escalaAtual.medios, "Novatos": escalaAtual.novatos };
+            for (const [label, pessoas] of Object.entries(cats)) {
                 texto += `*${label}:* ${pessoas.map(p => p.nome).join(', ') || '---'}\n`;
             }
-            if(obs) texto += `\n⚠️ *Obs:* ${obs}`;
+            if(document.getElementById('obs').value) texto += `\n⚠️ *Obs:* ${document.getElementById('obs').value}`;
 
             window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
         }
