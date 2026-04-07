@@ -215,6 +215,8 @@
   <script>
     // ── Config ────────────────────────────────────────────────────
     var URL_API = "https://script.google.com/macros/s/AKfycbzyDSWSVz3TiNVB6YxflRpAlRVD6ox6D47T5pJGUWagjGEF9qX_idUOvQe1ZiZjl5ZdOg/exec";
+    var LITURGIA_API = "https://liturgia.up.railway.app/";
+    var SANTOS_API = "https://calapi.inadiutorium.cz/api/v0/pt/calendars/general-la/";
 
     var FRASES = [
       '"Tudo posso naquele que me fortalece." — Fl 4,13',
@@ -335,7 +337,7 @@
     }
 
     function carregarMissas(config) {
-      if (!config || !config.datas || !config.horas || !config.datas.length) {
+      if (!config || !config.datas || !config.horas || !config.datas.length || !config.horas.length) {
         document.getElementById('listaMissas').innerHTML =
           '<p class="text-slate-500 italic text-sm text-center py-3">Nenhuma missa disponível no momento.</p>';
         return;
@@ -379,7 +381,7 @@
       var y = hoje.getFullYear();
       abrirModalLoader('Buscando liturgia do dia…');
       try {
-        var resp = await fetch('https://liturgia.up.railway.app/', { signal: AbortSignal.timeout(7000) });
+      var resp = await fetch(LITURGIA_API, { signal: AbortSignal.timeout(7000) });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         var data = await resp.json();
         var html = '<div class="space-y-2">';
@@ -389,7 +391,7 @@
         if (data.primeiraLeitura && data.primeiraLeitura.titulo) {
           html += '<div class="mt-2 bg-slate-900 rounded-lg p-2"><p class="text-xs font-bold text-indigo-300 uppercase">1ª Leitura</p>' +
             '<p class="text-xs text-slate-400 mt-1">' + esc(data.primeiraLeitura.titulo) + '</p>';
-          if (data.primeiraLeitura.texto) html += '<p class="text-xs text-slate-500 mt-1 italic line-clamp-3">' + esc(data.primeiraLeitura.texto.substring(0,200)) + '…</p>';
+          if (data.primeiraLeitura.texto) html += '<p class="text-xs text-slate-500 mt-1 italic line-clamp-3">' + esc(truncarTexto(data.primeiraLeitura.texto, 200)) + '…</p>';
           html += '</div>';
         }
         if (data.segundaLeitura && data.segundaLeitura.titulo) {
@@ -399,7 +401,7 @@
         if (data.evangelho && data.evangelho.titulo) {
           html += '<div class="mt-1 bg-slate-900 rounded-lg p-2"><p class="text-xs font-bold text-amber-400 uppercase">Evangelho</p>' +
             '<p class="text-xs text-slate-400 mt-1">' + esc(data.evangelho.titulo) + '</p>';
-          if (data.evangelho.texto) html += '<p class="text-xs text-slate-500 mt-1 italic">' + esc(data.evangelho.texto.substring(0,200)) + '…</p>';
+          if (data.evangelho.texto) html += '<p class="text-xs text-slate-500 mt-1 italic">' + esc(truncarTexto(data.evangelho.texto, 200)) + '…</p>';
           html += '</div>';
         }
         html += '</div>';
@@ -423,8 +425,7 @@
       abrirModalLoader('Buscando santo do dia…');
       try {
         var resp = await fetch(
-          'https://calapi.inadiutorium.cz/api/v0/pt/calendars/general-la/' +
-          hoje.getFullYear() + '/' + (hoje.getMonth()+1) + '/' + hoje.getDate(),
+          SANTOS_API + hoje.getFullYear() + '/' + (hoje.getMonth()+1) + '/' + hoje.getDate(),
           { signal: AbortSignal.timeout(7000) }
         );
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -673,6 +674,14 @@
         .replace(/'/g,'&#39;');
     }
 
+    // Trunca texto no limite de palavras para evitar cortar caracteres multibyte
+    function truncarTexto(str, maxLen) {
+      if (!str || str.length <= maxLen) return str || '';
+      var cortado = str.substring(0, maxLen);
+      var ultimoEspaco = cortado.lastIndexOf(' ');
+      return ultimoEspaco > 0 ? cortado.substring(0, ultimoEspaco) : cortado;
+    }
+
     // ── Quiz ──────────────────────────────────────────────────────
     var QUIZ_KEY = 'coroinhas_quiz_v1';
     var MAX_POR_DIA = 10;
@@ -691,6 +700,7 @@
       return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
     }
 
+    // Fisher-Yates shuffle algorithm
     function embaralhar(arr) {
       for (var i = arr.length - 1; i > 0; i--) {
         var j = Math.floor(Math.random() * (i + 1));
@@ -701,7 +711,10 @@
 
     function getEstado() {
       var state = null;
-      try { state = JSON.parse(localStorage.getItem(QUIZ_KEY)); } catch (e) {}
+      try { state = JSON.parse(localStorage.getItem(QUIZ_KEY)); } catch (e) {
+        // Dados corrompidos — será criado um estado novo
+        state = null;
+      }
       var hoje = dataHoje();
       var mes = mesAtual();
       if (!state) {
@@ -726,7 +739,10 @@
     }
 
     function salvarEstado(state) {
-      try { localStorage.setItem(QUIZ_KEY, JSON.stringify(state)); } catch(e) {}
+      try { localStorage.setItem(QUIZ_KEY, JSON.stringify(state)); } catch(e) {
+        // Quota excedida ou armazenamento indisponível — progresso pode não ser salvo
+        console.warn('Quiz: não foi possível salvar o progresso.', e);
+      }
     }
 
     function atualizarQuizUI() {
