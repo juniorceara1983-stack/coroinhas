@@ -1,46 +1,467 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Administrativo Pro ⛪</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #0f172a; }
+    .card { background: #1e293b; border: 1px solid #334155; }
+    .inp { background: #0f172a; border: 1px solid #475569; color: #e2e8f0; }
+    .inp:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 2px #6366f140; }
+    select.inp option { background: #1e293b; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 1s linear infinite; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal-anim { animation: fadeIn 0.2s ease; }
+  </style>
 </head>
-<body>
-    <h1>Admin Panel</h1>
-    <div id="scaleSection">
-        <h2>Generated Scale for <span id="dateTime">2026-04-07 20:32:55</span></h2>
-        <div id="listaFinal"></div>
-        <button id="clearAvailability">Clear Availability</button>
+<body class="min-h-screen p-3 text-slate-200 font-sans">
+
+  <!-- ===== MODAL GLOBAL ===== -->
+  <div id="modalGlobal" style="display:none" class="fixed inset-0 z-50 items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="modal-anim card rounded-2xl shadow-2xl max-w-sm w-full p-5 flex flex-col items-center gap-4">
+      <img id="modalImg" src="IMG_20260401_014539.jpg" alt="Paróquia" class="w-28 h-28 rounded-full object-cover border-4 border-indigo-500 shadow-lg" />
+      <p id="modalFrase" class="text-center text-sm text-slate-300 italic leading-relaxed"></p>
+      <div id="modalLoader" class="flex flex-col items-center gap-2">
+        <svg class="spinner w-10 h-10 text-indigo-400" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        <span id="modalStatus" class="text-sm text-slate-400">Aguarde…</span>
+      </div>
+      <p id="modalMensagem" style="display:none" class="text-center font-semibold text-base"></p>
+      <button id="modalFecharBtn" style="display:none" class="mt-1 px-6 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400" onclick="fecharModal()">OK</button>
     </div>
-    <script>
-        function enviarWhatsApp() {
-            const names = [...document.querySelectorAll('#listaFinal .name')].map(name => name.innerText).join('\n');
-            const message = `\n${names}`;
-            // Code to send message...
+  </div>
+
+  <!-- ===== HEADER ===== -->
+  <div class="max-w-xl mx-auto mb-5">
+    <h1 class="text-2xl font-extrabold text-center text-indigo-400 tracking-tight">⛪ Painel Administrativo Pro</h1>
+    <p class="text-center text-slate-500 text-xs mt-1">Gestão de Coroinhas</p>
+  </div>
+
+  <div class="max-w-xl mx-auto flex flex-col gap-5">
+
+    <!-- ===== 1. NOVO COROINHA ===== -->
+    <section class="card rounded-2xl p-5 shadow-lg">
+      <h2 class="text-lg font-bold text-indigo-300 mb-4">👤 Novo Coroinha</h2>
+      <div class="flex flex-col gap-3">
+        <input id="cadNome" type="text" placeholder="Nome completo" class="inp rounded-xl px-4 py-3 w-full text-sm" />
+        <select id="cadCat" class="inp rounded-xl px-4 py-3 w-full text-sm">
+          <option value="Acólito">Acólito</option>
+          <option value="Veterano">Veterano</option>
+          <option value="Médio">Médio</option>
+          <option value="Novato">Novato</option>
+        </select>
+        <button onclick="executarComModal(cadastrarMembro)"
+          class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 focus:ring-2 focus:ring-indigo-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none">
+          💾 Salvar Coroinha
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== 2. PROGRAMAR MISSAS DO MÊS ===== -->
+    <section class="card rounded-2xl p-5 shadow-lg">
+      <h2 class="text-lg font-bold text-indigo-300 mb-4">📅 Programar Missas do Mês</h2>
+      <div class="flex flex-col gap-3">
+        <div class="flex gap-2">
+          <div class="flex-1 flex flex-col gap-1">
+            <label class="text-xs text-slate-400">Mês / Ano</label>
+            <input id="mesProgramacao" type="month" class="inp rounded-xl px-3 py-3 w-full text-sm" />
+          </div>
+          <div class="flex-1 flex flex-col gap-1">
+            <label class="text-xs text-slate-400">Horário</label>
+            <input id="horaMissa" type="time" class="inp rounded-xl px-3 py-3 w-full text-sm" />
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <div class="flex-1 flex flex-col gap-1">
+            <label class="text-xs text-slate-400">Posição</label>
+            <select id="ordemMissa" class="inp rounded-xl px-3 py-3 w-full text-sm">
+              <option value="1">1º</option>
+              <option value="2">2º</option>
+              <option value="3">3º</option>
+              <option value="4">4º</option>
+              <option value="5">5º</option>
+            </select>
+          </div>
+          <div class="flex-1 flex flex-col gap-1">
+            <label class="text-xs text-slate-400">Dia da Semana</label>
+            <select id="diaSemana" class="inp rounded-xl px-3 py-3 w-full text-sm">
+              <option value="0">Domingo</option>
+              <option value="1">Segunda-feira</option>
+              <option value="2">Terça-feira</option>
+              <option value="3">Quarta-feira</option>
+              <option value="4">Quinta-feira</option>
+              <option value="5">Sexta-feira</option>
+              <option value="6">Sábado</option>
+            </select>
+          </div>
+        </div>
+        <div id="labelDataCalculada" class="text-center text-indigo-300 font-semibold text-sm min-h-5"></div>
+        <button onclick="executarComModal(liberarMissa)"
+          class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 focus:ring-2 focus:ring-emerald-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none">
+          🗓️ Liberar Missa
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== 3. LISTA DE MISSAS ===== -->
+    <section class="card rounded-2xl p-5 shadow-lg">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-indigo-300">📋 Missas Programadas</h2>
+        <button onclick="carregarListaMissas()" class="text-xs text-slate-400 hover:text-indigo-300 transition-colors focus:outline-none">↻ Atualizar</button>
+      </div>
+      <div id="listaRemover" class="flex flex-col gap-2 text-sm text-slate-300">
+        <span class="text-slate-500 italic text-center py-3">Carregando missas…</span>
+      </div>
+    </section>
+
+    <!-- ===== 4. GERAR ESCALA ===== -->
+    <section class="card rounded-2xl p-5 shadow-lg">
+      <h2 class="text-lg font-bold text-indigo-300 mb-4">⚡ Gerar Escala do Dia</h2>
+      <div class="flex flex-col gap-3">
+        <select id="missaSelecionada" class="inp rounded-xl px-4 py-3 w-full text-sm">
+          <option value="">— Selecione a missa —</option>
+        </select>
+        <button onclick="executarComModal(sortearDisponiveis)"
+          class="w-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 focus:ring-2 focus:ring-violet-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none">
+          🎲 Sortear Disponíveis
+        </button>
+        <div id="resultadoEscala" style="display:none">
+          <div class="bg-slate-900 rounded-xl p-4 mt-1 mb-3">
+            <p class="text-xs text-slate-400 mb-2 font-semibold uppercase tracking-wide">Escala Gerada</p>
+            <div id="listaFinal" class="text-sm text-slate-200 leading-relaxed"></div>
+            <div id="obsEscala" class="mt-2 text-xs text-slate-400 italic"></div>
+          </div>
+          <button onclick="executarComModal(enviarWhatsApp)"
+            class="w-full bg-green-600 hover:bg-green-500 active:bg-green-700 focus:ring-2 focus:ring-green-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none">
+            📲 Enviar no WhatsApp
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 5. RESETAR DISPONIBILIDADES ===== -->
+    <section class="card rounded-2xl p-5 shadow-lg mb-6">
+      <h2 class="text-lg font-bold text-indigo-300 mb-4">🔄 Resetar Disponibilidades</h2>
+      <p class="text-slate-400 text-sm mb-4">Remove todas as disponibilidades marcadas no mês. Use no início de cada mês.</p>
+      <button onclick="executarComModal(resetarMes)"
+        class="w-full bg-rose-700 hover:bg-rose-600 active:bg-rose-800 focus:ring-2 focus:ring-rose-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none">
+        ⚠️ Resetar Disponibilidades do Mês
+      </button>
+    </section>
+
+  </div><!-- /max-w-xl -->
+
+  <script>
+    // ── Configuração ──────────────────────────────────────────────
+    const API = "https://script.google.com/macros/s/AKfycbzyDSWSVz3TiNVB6YxflRpAlRVD6ox6D47T5pJGUWagjGEF9qX_idUOvQe1ZiZjl5ZdOg/exec";
+
+    const FRASES = [
+      "\"Tudo posso naquele que me fortalece.\" — Fl 4,13",
+      "\"O Senhor é meu pastor e nada me faltará.\" — Sl 23,1",
+      "\"Vinde a mim todos os que estais cansados e sobrecarregados.\" — Mt 11,28",
+      "\"Quem serve a mim, meu Pai o honrará.\" — Jo 12,26",
+      "\"Não temas, porque eu sou contigo.\" — Is 41,10",
+      "\"Ide e fazei discípulos de todas as nações.\" — Mt 28,19",
+      "\"O amor de Deus foi derramado em nossos corações pelo Espírito Santo.\" — Rm 5,5",
+      "\"Sede santos, porque eu, o Senhor vosso Deus, sou santo.\" — Lv 19,2",
+      "\"Nossa vida está escondida com Cristo em Deus.\" — Cl 3,3",
+      "\"Servi ao Senhor com alegria.\" — Sl 100,2",
+      "\"Que serve ao altar, do altar deve viver.\" — 1Cor 9,13",
+      "\"Louvai o Senhor, invocai o seu nome!\" — Sl 105,1",
+      "\"Deus é amor.\" — 1Jo 4,8",
+      "\"Alegrai-vos sempre no Senhor.\" — Fl 4,4",
+      "\"Ora et Labora\" — São Bento de Núrsia",
+      "\"Fazer o bem é uma doce necessidade.\" — São Francisco de Sales",
+      "\"Que eu não me glorie senão na cruz de Nosso Senhor Jesus Cristo.\" — Gl 6,14",
+    ];
+
+    let escalaAtual = null;
+
+    // ── Modal ─────────────────────────────────────────────────────
+    function abrirModal(status) {
+      const el = document.getElementById('modalGlobal');
+      document.getElementById('modalFrase').textContent = FRASES[Math.floor(Math.random() * FRASES.length)];
+      document.getElementById('modalLoader').style.display = 'flex';
+      document.getElementById('modalStatus').textContent = status || 'Aguarde…';
+      document.getElementById('modalMensagem').style.display = 'none';
+      document.getElementById('modalFecharBtn').style.display = 'none';
+      el.style.display = 'flex';
+    }
+
+    function atualizarModal(msg, tipo) {
+      document.getElementById('modalLoader').style.display = 'none';
+      const msgEl = document.getElementById('modalMensagem');
+      msgEl.textContent = msg;
+      msgEl.className = 'text-center font-semibold text-base ' + (
+        tipo === 'erro'    ? 'text-rose-400' :
+        tipo === 'aviso'   ? 'text-yellow-400' :
+        'text-emerald-400'
+      );
+      msgEl.style.display = 'block';
+      document.getElementById('modalFecharBtn').style.display = 'inline-block';
+    }
+
+    function fecharModal() {
+      document.getElementById('modalGlobal').style.display = 'none';
+    }
+
+    async function executarComModal(asyncFn) {
+      abrirModal('Processando…');
+      try {
+        await asyncFn();
+      } catch (e) {
+        atualizarModal('Erro: ' + (e.message || e), 'erro');
+        return;
+      }
+    }
+
+    // ── Utilitários ───────────────────────────────────────────────
+    async function postJSON(payload) {
+      const resp = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload),
+      });
+      const text = await resp.text();
+      let data;
+      try { data = JSON.parse(text); } catch (e) { data = { raw: text, parseError: e.message }; }
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${text}`);
+      return data;
+    }
+
+    /**
+     * Normaliza a escala de qualquer formato retornado pela API:
+     * - Array de strings: retorna direto
+     * - Objeto com categorias (ex: {Acólito: [...], Veterano: [...]}): achata os valores
+     * Filtra entradas vazias e o placeholder "---".
+     */
+    function normalizarNomesEscala(escala) {
+      if (!escala) return [];
+      const entries = Array.isArray(escala) ? escala : Object.values(escala).flat();
+      return entries
+        .map(n => (n || '').toString().trim())
+        .filter(v => v && v !== '---' && v !== '-');
+    }
+
+    function formatBR(date) {
+      const dd = String(date.getDate()).padStart(2, "0");
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const yyyy = date.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
+
+    function obterDataPelaPosicao(ordem, diaSemana, ano, mesIndex) {
+      let d = new Date(ano, mesIndex, 1);
+      let count = 0;
+      while (d.getMonth() === mesIndex) {
+        if (d.getDay() === diaSemana) {
+          count++;
+          if (count === ordem) return new Date(d);
+        }
+        d.setDate(d.getDate() + 1);
+      }
+      return null;
+    }
+
+    const NOMES_DIA = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+    const ORDINAL   = ["","1º","2º","3º","4º","5º"];
+
+    function calcularLabelData() {
+      const mesRaw = document.getElementById('mesProgramacao').value;
+      const ordemVal = parseInt(document.getElementById('ordemMissa').value);
+      const diaVal   = parseInt(document.getElementById('diaSemana').value);
+      const label    = document.getElementById('labelDataCalculada');
+      if (!mesRaw) { label.textContent = ''; return; }
+      const [anoStr, mesStr] = mesRaw.split('-');
+      const dateObj = obterDataPelaPosicao(ordemVal, diaVal, parseInt(anoStr), parseInt(mesStr) - 1);
+      if (dateObj) {
+        label.textContent = `${ORDINAL[ordemVal]} ${NOMES_DIA[diaVal]} (${formatBR(dateObj)})`;
+      } else {
+        label.textContent = `Não existe ${ORDINAL[ordemVal]} ${NOMES_DIA[diaVal]} neste mês`;
+      }
+    }
+
+    ['mesProgramacao','ordemMissa','diaSemana'].forEach(id => {
+      document.getElementById(id).addEventListener('change', calcularLabelData);
+    });
+
+    // ── Ações ─────────────────────────────────────────────────────
+    async function cadastrarMembro() {
+      const nome = document.getElementById('cadNome').value.trim();
+      const cat  = document.getElementById('cadCat').value;
+      if (!nome) {
+        atualizarModal('Preencha o nome do coroinha.', 'aviso');
+        return;
+      }
+      abrirModal('Salvando coroinha…');
+      await postJSON({ action: "cadastrarMembro", nome, cat });
+      document.getElementById('cadNome').value = '';
+      atualizarModal(`✅ ${nome} cadastrado com sucesso!`, 'sucesso');
+    }
+
+    async function liberarMissa() {
+      const mesRaw = document.getElementById('mesProgramacao').value;
+      const hora   = document.getElementById('horaMissa').value;
+      const ordemVal = parseInt(document.getElementById('ordemMissa').value);
+      const diaVal   = parseInt(document.getElementById('diaSemana').value);
+
+      if (!mesRaw) {
+        atualizarModal('Selecione o mês da programação.', 'aviso');
+        return;
+      }
+      if (!hora) {
+        atualizarModal('Preencha o horário da missa.', 'aviso');
+        return;
+      }
+
+      const [anoStr, mesStr] = mesRaw.split('-');
+      const ano = parseInt(anoStr);
+      const mesIndex = parseInt(mesStr) - 1;
+      const dateObj = obterDataPelaPosicao(ordemVal, diaVal, ano, mesIndex);
+
+      if (!dateObj) {
+        atualizarModal(
+          `Não existe ${ORDINAL[ordemVal]} ${NOMES_DIA[diaVal]} no mês selecionado.`,
+          'erro'
+        );
+        return;
+      }
+
+      const dataFormatada = formatBR(dateObj);
+      const label = `${ORDINAL[ordemVal]} ${NOMES_DIA[diaVal]} (${dataFormatada})`;
+
+      abrirModal('Liberando missa…');
+      await postJSON({ action: "addMissa", data: dataFormatada, hora, label });
+      document.getElementById('labelDataCalculada').textContent = label;
+      await carregarListaMissas();
+      atualizarModal(`✅ Missa liberada: ${label} às ${hora}`, 'sucesso');
+    }
+
+    async function removerMissa(id, labelMissa) {
+      abrirModal('Removendo missa…');
+      await postJSON({ action: "removerMissa", id });
+      await carregarListaMissas();
+      atualizarModal(`🗑️ Missa removida: ${labelMissa}`, 'sucesso');
+    }
+
+    async function sortearDisponiveis() {
+      const missaId = document.getElementById('missaSelecionada').value;
+      if (!missaId) {
+        atualizarModal('Selecione uma missa antes de sortear.', 'aviso');
+        return;
+      }
+      abrirModal('Sorteando disponíveis…');
+      const data = await postJSON({ action: "gerarEscala", missaId });
+      escalaAtual = data;
+      renderizarEscala(data);
+      atualizarModal('✅ Escala gerada com sucesso!', 'sucesso');
+    }
+
+    function renderizarEscala(data) {
+      const listaFinal = document.getElementById('listaFinal');
+      const obsEl      = document.getElementById('obsEscala');
+      if (!data || !data.escala) {
+        listaFinal.innerHTML = '<span class="text-slate-500 italic">Nenhum resultado.</span>';
+        document.getElementById('resultadoEscala').style.display = 'block';
+        return;
+      }
+      const nomes = normalizarNomesEscala(data.escala);
+      listaFinal.innerHTML = nomes.map(n => `<div>• ${n}</div>`).join('') || '<span class="text-slate-500 italic">Nenhum disponível.</span>';
+      obsEl.textContent = data.obs ? `Obs: ${data.obs}` : '';
+      document.getElementById('resultadoEscala').style.display = 'block';
+    }
+
+    async function enviarWhatsApp() {
+      if (!escalaAtual) {
+        atualizarModal('Gere a escala antes de enviar.', 'aviso');
+        return;
+      }
+      abrirModal('Preparando mensagem…');
+      const data = escalaAtual;
+      const missaLabel = document.getElementById('missaSelecionada').selectedOptions[0]?.text || '';
+
+      // Build names list – no category headers, no empty/--- values
+      const nomes = normalizarNomesEscala(data.escala);
+
+      if (nomes.length === 0) {
+        atualizarModal('Nenhum nome na escala para enviar.', 'aviso');
+        return;
+      }
+
+      let msg = `⛪ *Escala de Coroinhas*\n`;
+      msg += `📅 ${missaLabel}\n\n`;
+      msg += nomes.map(n => `• ${n}`).join('\n');
+      if (data.obs && data.obs.trim()) msg += `\n\n📝 ${data.obs.trim()}`;
+
+      const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
+      atualizarModal('✅ WhatsApp aberto!', 'sucesso');
+    }
+
+    async function resetarMes() {
+      abrirModal('Resetando disponibilidades…');
+      await postJSON({ action: "limparDisponibilidade" });
+      escalaAtual = null;
+      document.getElementById('resultadoEscala').style.display = 'none';
+      document.getElementById('listaFinal').innerHTML = '';
+      document.getElementById('obsEscala').textContent = '';
+      atualizarModal('✅ Disponibilidades resetadas!', 'sucesso');
+    }
+
+    // ── Carregar lista de missas ───────────────────────────────────
+    async function carregarListaMissas() {
+      const listaEl  = document.getElementById('listaRemover');
+      const selectEl = document.getElementById('missaSelecionada');
+      try {
+        const resp = await fetch(`${API}?action=listarMissas`);
+        const data = await resp.json();
+        const missas = data.missas || [];
+
+        if (missas.length === 0) {
+          listaEl.innerHTML = '<span class="text-slate-500 italic text-center py-3 block">Nenhuma missa programada.</span>';
+          selectEl.innerHTML = '<option value="">— Nenhuma missa —</option>';
+          return;
         }
 
-        document.getElementById('clearAvailability').addEventListener('click', function() {
-            if (confirm('Are you sure you want to clear availability?')) {
-                fetch('your-api-endpoint', { // Replace with your endpoint
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ action: 'limparDisponibilidade' })
-                }).then(response => {
-                    // Handle response
-                    alert('Availability cleared successfully!');
-                    // Clear UI state
-                    escalaAtual = null;
-                    $('#resultadoEscala').hide();
-                    $('#listaFinal').empty();
-                    $('#obs').empty();
-                }).catch(error => console.error('Error:', error));
-            }
+        listaEl.innerHTML = missas.map((m, i) => `
+          <div class="flex items-center justify-between bg-slate-900 rounded-xl px-4 py-3">
+            <span class="text-sm text-slate-300">${m.label || m.data} ${m.hora ? '· ' + m.hora : ''}</span>
+            <button data-missa-index="${i}"
+              class="btn-excluir text-xs bg-rose-700 hover:bg-rose-600 active:bg-rose-800 text-white px-3 py-1.5 rounded-lg font-bold transition-all focus:outline-none focus:ring-2 focus:ring-rose-400">
+              🗑️ Excluir
+            </button>
+          </div>`).join('');
+
+        // Attach delete handlers via event listeners (avoids inline onclick injection)
+        listaEl.querySelectorAll('.btn-excluir').forEach(btn => {
+          const i = parseInt(btn.dataset.missaIndex, 10);
+          const m = missas[i];
+          btn.addEventListener('click', () =>
+            executarComModal(() => removerMissa(m.id, m.label || m.data))
+          );
         });
-    </script>
+
+        selectEl.innerHTML = '<option value="">— Selecione a missa —</option>' +
+          missas.map(m => `<option value="${m.id}">${m.label || m.data}${m.hora ? ' ' + m.hora : ''}</option>`).join('');
+      } catch {
+        listaEl.innerHTML = '<span class="text-rose-400 italic text-center py-3 block">Erro ao carregar missas.</span>';
+      }
+    }
+
+    // ── Init ──────────────────────────────────────────────────────
+    (function init() {
+      // Default month to current
+      const now = new Date();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      document.getElementById('mesProgramacao').value = `${now.getFullYear()}-${mm}`;
+      calcularLabelData();
+      carregarListaMissas();
+    })();
+  </script>
 </body>
 </html>
