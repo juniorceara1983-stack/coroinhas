@@ -1,26 +1,115 @@
-<div id="etapa1">
-    <input type="text" id="nomeInput" placeholder="Digite seu nome exato">
-    <button onclick="validarNome()">Entrar</button>
-</div>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal do Coroinha</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-50 flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
+        
+        <div id="loginArea" class="text-center">
+            <div class="bg-blue-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <span class="text-white text-4xl">⛪</span>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Acesso Coroinha</h1>
+            <p class="text-gray-500 mb-8">Digite seu nome oficial da lista.</p>
+            
+            <input type="text" id="nomeInput" 
+                class="w-full p-4 border-2 border-gray-100 rounded-2xl mb-4 focus:border-blue-500 outline-none transition-all text-center text-lg" 
+                placeholder="Ex: Junior">
+            
+            <button onclick="validarNome()" id="btnEntrar" 
+                class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 shadow-lg active:scale-95 transition-all">
+                Entrar no Painel
+            </button>
+        </div>
 
-<div id="etapa2" style="display:none">
-    <h3>Selecione as Missas que pode servir:</h3>
-    <div id="listaMissas">
-        <label><input type="checkbox" class="missa" data-d="12/04" data-h="08:00"> 12/04 - 08h</label><br>
-        <label><input type="checkbox" class="missa" data-d="12/04" data-h="19:00"> 12/04 - 19h</label>
+        <div id="dispoArea" class="hidden">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Minha Disponibilidade</h2>
+            <p class="text-sm text-gray-500 mb-4 text-center">Marque todas as missas que você pode servir:</p>
+            
+            <div id="listaMissas" class="space-y-3 mb-6 max-h-80 overflow-y-auto px-2">
+                </div>
+            
+            <button onclick="enviarDispo()" id="btnEnviar" 
+                class="w-full bg-green-600 text-white font-bold py-4 rounded-2xl hover:bg-green-700 shadow-lg transition-all">
+                Confirmar Presença
+            </button>
+        </div>
+
+        <p id="msg" class="mt-4 text-center text-sm font-bold text-blue-600"></p>
     </div>
-    <button onclick="enviar()">Enviar Disponibilidade</button>
-</div>
 
-<script>
-async function validarNome() {
-    const nome = document.getElementById('nomeInput').value;
-    const resp = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({action: "verificarNome", nome: nome})
-    });
-    const result = await resp.json();
-    if(result.existe) document.getElementById('etapa2').style.display='block';
-    else alert("Nome não encontrado na lista oficial!");
-}
-</script>
+    <script>
+        const URL_API = "https://script.google.com/macros/s/AKfycbzyDSWSVz3TiNVB6YxflRpAlRVD6ox6D47T5pJGUWagjGEF9qX_idUOvQe1ZiZjl5ZdOg/exec";
+        let nomeUsuario = "";
+
+        async function validarNome() {
+            const nome = document.getElementById('nomeInput').value.trim();
+            if(!nome) return alert("Por favor, digite seu nome.");
+            
+            document.getElementById('btnEntrar').innerText = "Validando...";
+
+            try {
+                const response = await fetch(`${URL_API}?nome=${encodeURIComponent(nome)}`);
+                const data = await response.json();
+
+                if(data.existe) {
+                    nomeUsuario = nome;
+                    carregarMissas(data.config);
+                } else {
+                    alert("Nome não encontrado! Verifique se digitou corretamente.");
+                    document.getElementById('btnEntrar').innerText = "Entrar no Painel";
+                }
+            } catch (e) {
+                alert("Erro de conexão. Verifique o Script.");
+                document.getElementById('btnEntrar').innerText = "Entrar no Painel";
+            }
+        }
+
+        function carregarMissas(config) {
+            const container = document.getElementById('listaMissas');
+            let html = "";
+            config.datas.forEach(d => {
+                config.horas.forEach(h => {
+                    html += `
+                        <label class="flex items-center p-4 border-2 border-gray-50 rounded-2xl hover:bg-blue-50 cursor-pointer transition-all">
+                            <input type="checkbox" class="missa-item w-6 h-6 text-blue-600 rounded-md" data-d="${d}" data-h="${h}">
+                            <div class="ml-4 text-left">
+                                <p class="text-gray-800 font-bold">${d}</p>
+                                <p class="text-gray-500 text-xs">Horário: ${h}h</p>
+                            </div>
+                        </label>`;
+                });
+            });
+            container.innerHTML = html;
+            document.getElementById('loginArea').classList.add('hidden');
+            document.getElementById('dispoArea').classList.remove('hidden');
+        }
+
+        async function enviarDispo() {
+            const selecionados = document.querySelectorAll('.missa-item:checked');
+            if(selecionados.length === 0) return alert("Selecione ao menos uma missa!");
+
+            const selecoes = Array.from(selecionados).map(i => ({data: i.dataset.d, hora: i.dataset.h}));
+            document.getElementById('btnEnviar').innerText = "Enviando...";
+            document.getElementById('btnEnviar').disabled = true;
+
+            await fetch(URL_API, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({action: "salvarDisponibilidade", nome: nomeUsuario, selecoes: selecoes})
+            });
+
+            document.getElementById('dispoArea').innerHTML = `
+                <div class="text-center py-10">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h3 class="text-xl font-bold text-gray-800">Tudo certo!</h3>
+                    <p class="text-gray-500">Sua disponibilidade foi registrada.</p>
+                </div>`;
+        }
+    </script>
+</body>
+</html>
