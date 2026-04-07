@@ -2,237 +2,326 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Painel Administrativo Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Coordenador</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
-        /* Correção visual para inputs e relógio */
-        input[type="time"]::-webkit-calendar-picker-indicator {
-            display: block; background: transparent; bottom: 0; color: transparent;
-            cursor: pointer; height: auto; left: 0; position: absolute; right: 0; top: 0; width: auto;
-        }
-        input[type="time"] { position: relative; padding-right: 40px !important; }
-
-        /* Modal do Padre Luciano */
         #modalLoading {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center;
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            align-items: center; justify-content: center;
             opacity: 0; transition: opacity 0.3s ease;
         }
         #modalLoading.show { display: flex; opacity: 1; }
         .modal-content {
-            background: #111827; padding: 30px; border-radius: 28px;
-            width: 90%; max-w-sm; text-center; border: 1px solid #374151;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            background: #1f2937;
+            padding: 30px; border-radius: 24px;
+            width: 90%; max-width: 400px; text-center;
+            border: 2px solid #374151;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
         }
         .loader {
-            border: 3px solid #374151; border-top: 3px solid #10b981;
-            border-radius: 50%; width: 24px; height: 24px;
+            border: 4px solid #374151;
+            border-top: 4px solid #10b981;
+            border-radius: 50%; width: 30px; height: 30px;
             animation: spin 1s linear infinite; margin: 15px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Separação visual entre seções */
+        .secao-card {
+            transition: all 0.3s ease;
+        }
+        .secao-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 25px 30px -5px rgba(0,0,0,0.6);
+        }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 p-4 pb-12">
+<body class="bg-gray-900 text-gray-100 p-4 md:p-6">
 
     <div id="modalLoading">
         <div class="modal-content">
-            <img src="https://image.api.ai.google.com/9788d648-5c4e-11ef-932b-98039b1a5105.jpg" class="w-32 h-32 mx-auto rounded-2xl mb-6 shadow-2xl object-cover border-2 border-gray-700">
-            <p id="fraseDoDia" class="text-sm text-gray-300 italic mb-4 leading-relaxed font-serif"></p>
+            <img src="https://image.api.ai.google.com/9788d648-5c4e-11ef-932b-98039b1a5105.jpg" alt="Padre Luciano" class="w-24 h-24 mx-auto rounded-full border-4 border-gray-600 mb-5 shadow-lg object-cover">
+            <p id="fraseDoDia" class="text-sm text-gray-300 italic mb-3 leading-relaxed font-serif"></p>
             <div class="loader"></div>
-            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em]">Processando...</p>
+            <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Processando...</p>
         </div>
     </div>
 
-    <div class="max-w-3xl mx-auto space-y-6">
+    <div class="max-w-4xl mx-auto space-y-6">
         
-        <div class="bg-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl">
-            <h2 class="text-xl font-bold text-green-400 mb-5 flex items-center"><span class="mr-3">👤</span> Novo Coroinha</h2>
-            <div class="grid grid-cols-1 gap-4">
-                <input type="text" id="cadNome" placeholder="Nome Completo" class="bg-gray-800 border border-gray-700 p-4 rounded-xl text-white w-full">
-                <div class="flex gap-3">
-                    <select id="cadCat" class="flex-1 bg-gray-800 border border-gray-700 p-4 rounded-xl text-white">
-                        <option value="Acólito">Acólito</option>
-                        <option value="Veterano">Veterano</option>
-                        <option value="Médio">Médio</option>
-                        <option value="Novato">Novato</option>
-                    </select>
-                    <button onclick="executarComModal(cadastrarMembro)" class="bg-green-600 px-8 rounded-xl font-bold">Salvar</button>
-                </div>
-            </div>
+        <!-- CABEÇALHO -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-green-400 mb-2">⛪ Painel de Coordenação</h1>
+            <p class="text-gray-400">Gerenciamento de Coroinhas e Escalas de Missa</p>
         </div>
 
-        <div class="bg-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl border-l-4 border-l-yellow-500">
-            <h2 class="text-xl font-bold text-yellow-400 mb-4 font-bold tracking-tight">📅 Programar Missas do Mês</h2>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <select id="posicaoSemana" class="p-4 bg-gray-800 rounded-xl border border-gray-700 text-white">
-                    <option value="1">1º</option><option value="2">2º</option><option value="3">3º</option><option value="4">4º</option><option value="5">5º</option>
+        <!-- SEÇÃO 1: CADASTRAR COROINHA -->
+        <div class="bg-gradient-to-br from-gray-800 to-gray-750 rounded-3xl p-6 border border-gray-700 shadow-2xl secao-card">
+            <h2 class="text-xl font-bold text-green-400 mb-5 flex items-center">
+                <span class="mr-3 text-2xl">👤</span> Cadastrar Coroinha
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input 
+                    type="text" 
+                    id="cadNome" 
+                    placeholder="Nome Completo" 
+                    class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 text-white placeholder-gray-500 transition"
+                >
+                <select 
+                    id="cadCat" 
+                    class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 text-white transition cursor-pointer"
+                >
+                    <option value="Acólito">Acólito</option>
+                    <option value="Veterano">Veterano</option>
+                    <option value="Médio">Médio</option>
+                    <option value="Novato">Novato</option>
                 </select>
-                <select id="diaSemana" class="p-4 bg-gray-800 rounded-xl border border-gray-700 text-white">
-                    <option value="0">Domingo</option><option value="1">Segunda</option><option value="2">Terça</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option><option value="6">Sábado</option>
-                </select>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <input type="time" id="novaHoraMissa" class="p-4 bg-gray-800 rounded-xl border border-gray-700 text-white">
-                <button onclick="executarComModal(addMissaAutomatica)" class="bg-yellow-600 font-bold rounded-xl shadow-lg">Liberar Missa</button>
-            </div>
-            
-            <div class="mt-8 border-t border-gray-800 pt-5">
-                <h3 class="text-[10px] font-bold text-gray-500 mb-4 uppercase tracking-widest">Missas Ativas:</h3>
-                <div id="listaRemover" class="space-y-3 max-h-48 overflow-y-auto pr-2">
-                    </div>
-            </div>
-        </div>
-
-        <div class="bg-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl">
-            <h2 class="text-xl font-bold text-blue-400 mb-6">🛠️ Gerar Escala do Dia</h2>
-            <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
-                <input type="date" id="dataEscala" class="p-4 bg-gray-800 border border-gray-700 rounded-xl text-white outline-none">
-                <input type="time" id="horaEscala" class="p-4 bg-gray-800 border border-gray-700 rounded-xl text-white outline-none">
-            </div>
-            <button onclick="executarComModal(gerarEscala)" class="w-full bg-blue-600 font-bold py-5 rounded-2xl shadow-lg mb-8 text-white text-lg transition-all active:scale-95">Sortear Disponíveis</button>
-            
-            <div id="resultadoEscala" class="hidden space-y-6">
-                <div id="listaFinal" class="bg-gray-800 p-6 rounded-2xl border border-blue-900/40 space-y-5">
-                    </div>
-                <textarea id="obs" class="w-full p-4 bg-gray-800 border border-gray-700 rounded-xl h-24 text-white outline-none focus:border-emerald-500" placeholder="Observações (ex: Chegar 20 min antes)..."></textarea>
-                <button onclick="enviarWhatsApp()" class="w-full bg-emerald-600 font-bold py-5 rounded-2xl flex items-center justify-center shadow-lg text-white text-lg">
-                    <span class="mr-3">💬</span> Enviar no WhatsApp
+                <button 
+                    onclick="chamarComModal(cadastrarMembro)" 
+                    id="btnCad" 
+                    class="bg-green-600 hover:bg-green-700 font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95 cursor-pointer"
+                >
+                    ✅ Salvar Coroinha
                 </button>
             </div>
         </div>
 
-        <div class="text-center py-6">
-            <button onclick="limparDados()" class="text-red-600 text-[11px] font-bold uppercase tracking-[0.2em] hover:underline transition-all">
-                ⚠️ Resetar Disponibilidades do Mês
-            </button>
+        <!-- SEÇÃO 2: ADICIONAR DATAS DE MISSA -->
+        <div class="bg-gradient-to-br from-gray-800 to-gray-750 rounded-3xl p-6 border border-l-4 border-gray-700 border-l-yellow-500 shadow-2xl secao-card">
+            <h2 class="text-xl font-bold text-yellow-400 mb-4 flex items-center">
+                <span class="mr-3 text-2xl">📅</span> Liberar Novas Datas de Missa
+            </h2>
+            <p class="text-sm text-gray-400 mb-5">Selecione o dia e a hora para liberar as inscrições no App dos coroinhas.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-500 mb-2 font-semibold">Data da Missa:</label>
+                    <input 
+                        type="date" 
+                        id="novaDataMissa" 
+                        class="w-full bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 text-white transition"
+                    >
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-2 font-semibold">Horário da Missa:</label>
+                    <input 
+                        type="time" 
+                        id="novaHoraMissa" 
+                        class="w-full bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 text-white transition"
+                    >
+                </div>
+                <div class="flex items-end">
+                    <button 
+                        onclick="chamarComModal(addMissa)" 
+                        id="btnAddMissa" 
+                        class="w-full bg-yellow-600 hover:bg-yellow-700 font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95 cursor-pointer text-white"
+                    >
+                        🔓 Liberar no App
+                    </button>
+                </div>
+            </div>
         </div>
+
+        <!-- SEÇÃO 3: GERAR ESCALA -->
+        <div class="bg-gradient-to-br from-gray-800 to-gray-750 rounded-3xl p-6 border border-l-4 border-gray-700 border-l-blue-500 shadow-2xl secao-card">
+            <h2 class="text-xl font-bold text-blue-400 mb-6 flex items-center">
+                <span class="mr-3 text-2xl">🛠️</span> Gerar Escala do Dia
+            </h2>
+            
+            <!-- Inputs de data e hora - bem separados -->
+            <div class="bg-gray-700/40 p-5 rounded-2xl mb-6 border border-blue-500/20">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">📆 Data da Missa:</label>
+                        <input 
+                            type="date" 
+                            id="dataEscala" 
+                            class="w-full p-3 bg-gray-700 border-2 border-gray-600 rounded-xl text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">⏰ Horário da Missa:</label>
+                        <input 
+                            type="time" 
+                            id="horaEscala" 
+                            class="w-full p-3 bg-gray-700 border-2 border-gray-600 rounded-xl text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botão de Gerar - bem destacado e separado -->
+            <button 
+                onclick="chamarComModal(gerarEscala)" 
+                id="btnGerar" 
+                class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-4 rounded-2xl mb-6 transition-all shadow-lg active:scale-95 cursor-pointer text-lg"
+            >
+                🎲 Sortear Disponíveis
+            </button>
+            
+            <!-- Resultado da Escala -->
+            <div id="resultadoEscala" class="hidden space-y-4">
+                <div class="bg-blue-500/10 border-2 border-blue-500/30 rounded-2xl p-5">
+                    <h3 class="text-blue-300 font-bold mb-3 text-lg">📋 Escala Gerada:</h3>
+                    <div id="listaFinal" class="space-y-3 text-sm"></div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-2">📝 Observações para o WhatsApp:</label>
+                    <textarea 
+                        id="obs" 
+                        class="w-full p-3 bg-gray-700 border-2 border-gray-600 rounded-xl h-24 text-white outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition resize-none" 
+                        placeholder="Ex: Lembrem-se de chegar 15 minutos antes..."
+                    ></textarea>
+                </div>
+                
+                <button 
+                    onclick="enviarWhatsApp()" 
+                    class="w-full bg-emerald-600 hover:bg-emerald-700 font-bold py-4 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 cursor-pointer text-lg"
+                >
+                    <span class="mr-2">💬</span> Enviar Escala no WhatsApp
+                </button>
+            </div>
+        </div>
+
     </div>
 
     <script>
         const API = "https://script.google.com/macros/s/AKfycbzyDSWSVz3TiNVB6YxflRpAlRVD6ox6D47T5pJGUWagjGEF9qX_idUOvQe1ZiZjl5ZdOg/exec";
-        
-        // Frases para o Modal
+        let escalaAtual = null;
+
+        // Lista de frases bíblicas e de santos
         const frases = [
             "\"Tudo o que pedirdes em oração, crede que recebestes.\"",
+            "\"A oração é o respirar da alma, busque a Deus sempre.\"",
             "\"Sirva ao Senhor com alegria e Ele guiará seus passos.\"",
+            "\"Pai, em Tuas mãos entrego o meu espírito.\"",
+            "São Francisco: \"Onde houver ódio, que eu leve o amor.\"",
             "\"O Senhor é meu pastor, nada me faltará.\"",
-            "\"Não tenhais medo de abrir as portas a Cristo.\"",
-            "\"Onde houver ódio, que eu leve o amor.\"",
-            "\"A oração é a chave que abre o coração de Deus.\""
+            "Santo Agostinho: \"Nossa alma só descansa em Ti.\"",
+            "\"Eis-me aqui, envia-me a mim.\"",
+            "\"Amarás o teu próximo como a ti mesmo.\"",
+            "São João Paulo II: \"Não tenhais medo de abrir as portas a Cristo.\""
         ];
 
-        // Função para exibir o Modal do Padre Luciano
-        async function executarComModal(acao) {
+        // Modal com frase aleatória
+        async function chamarComModal(funcaoOriginal) {
             const modal = document.getElementById('modalLoading');
             const pFrase = document.getElementById('fraseDoDia');
-            pFrase.innerText = frases[Math.floor(Math.random() * frases.length)];
+            
+            const indiceAleatorio = Math.floor(Math.random() * frases.length);
+            pFrase.innerText = frases[indiceAleatorio];
+            
             modal.classList.add('show');
-            const delay = new Promise(r => setTimeout(r, 2000));
-            try { await Promise.all([acao(), delay]); } 
-            finally { modal.classList.remove('show'); }
-        }
-
-        // --- LÓGICA DE CALENDÁRIO (Mantida) ---
-        function obterDataPelaPosicao(ordem, diaSemana) {
-            let d = new Date(); let mes = d.getMonth(); let ano = d.getFullYear();
-            let dataArr = new Date(ano, mes, 1); let count = 0;
-            while (dataArr.getMonth() === mes) {
-                if (dataArr.getDay() == diaSemana) { count++; if (count == ordem) return dataArr.toLocaleDateString('pt-BR'); }
-                dataArr.setDate(dataArr.getDate() + 1);
+            
+            const tempoMinimo = new Promise(resolve => setTimeout(resolve, 1500));
+            
+            try {
+                await Promise.all([funcaoOriginal(), tempoMinimo]);
+            } catch (error) {
+                console.error("Erro na função original:", error);
+            } finally {
+                modal.classList.remove('show');
             }
-            return null;
         }
 
-        // --- FUNÇÕES DA PLANILHA (Mantidas) ---
-        async function addMissaAutomatica() {
-            const ordem = document.getElementById('posicaoSemana').value;
-            const diaIdx = document.getElementById('diaSemana').value;
+        // Adicionar Missa
+        async function addMissa() {
+            const dataRaw = document.getElementById('novaDataMissa').value;
             const hora = document.getElementById('novaHoraMissa').value;
-            const diaNome = document.getElementById('diaSemana').options[document.getElementById('diaSemana').selectedIndex].text;
-            if(!hora) return alert("Selecione a hora!");
-            const dataCalc = obterDataPelaPosicao(ordem, diaIdx);
-            if(!dataCalc) return alert("Erro no cálculo da data.");
-            const label = `${ordem}º ${diaNome} (${dataCalc})`;
-            await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "cadastrarMissa", dataMissa: label, horaMissa: hora}) });
-            location.reload();
+            if(!dataRaw || !hora) return alert("Preencha data e hora da missa!");
+
+            const d = dataRaw.split("-");
+            const dataFmt = `${d[2]}/${d[1]}/${d[0]}`;
+            
+            document.getElementById('btnAddMissa').innerText = "Salvando...";
+            await fetch(API, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({action: "cadastrarMissa", dataMissa: dataFmt, horaMissa: hora}) 
+            });
+            
+            alert("✅ Sucesso! A data " + dataFmt + " já aparece para os coroinhas.");
+            document.getElementById('btnAddMissa').innerText = "🔓 Liberar no App";
+            document.getElementById('novaDataMissa').value = "";
+            document.getElementById('novaHoraMissa').value = "";
         }
 
+        // Cadastrar Coroinha
         async function cadastrarMembro() {
             const nome = document.getElementById('cadNome').value.trim();
             const cat = document.getElementById('cadCat').value;
-            if(!nome) return alert("Digite o nome!");
-            await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "cadastrarMembro", nome, cat }) });
-            location.reload();
-        }
-
-        // Carregar lista com botão de remover (Recuperado conforme solicitado)
-        async function carregarListaRemover() {
-            try {
-                const resp = await fetch(API); const data = await resp.json();
-                let html = ""; data.config.datas.forEach((d, i) => {
-                    html += `<div class="flex justify-between items-center bg-gray-800/60 p-3 rounded-xl border border-gray-700">
-                        <span class="font-medium text-sm">${d} - ${data.config.horas[i]}h</span>
-                        <button onclick="removerMissa('${d}','${data.config.horas[i]}')" class="text-red-500 font-bold px-3">Excluir</button>
-                    </div>`;
-                });
-                document.getElementById('listaRemover').innerHTML = html || "<p class='text-center text-gray-700 py-2'>Sem missas ativas.</p>";
-            } catch(e) { console.error(e); }
-        }
-
-        async function removerMissa(d, h) { 
-            if(confirm(`Remover missa de ${d}?`)) { 
-                await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "removerMissa", dataMissa: d, horaMissa: h}) }); 
-                location.reload(); 
-            } 
-        }
-
-        async function gerarEscala() {
-            const dRaw = document.getElementById('dataEscala').value; const h = document.getElementById('horaEscala').value;
-            if(!dRaw || !h) return alert("Selecione data e hora!");
-            const d = dRaw.split("-"); const dFmt = `${d[2]}/${d[1]}/${d[0]}`;
-            const resp = await fetch(API, { method: 'POST', body: JSON.stringify({ action: "gerarEscala", dataMissa: dFmt, horaMissa: h }) });
-            const esc = await resp.json();
+            if(!nome) return alert("Digite o nome do coroinha!");
             
-            let html = ""; const cats = { "Acólitos": esc.acolitos, "Veteranos": esc.veteranos, "Médios": esc.medios, "Novatos": esc.novatos };
-            for (const [label, lista] of Object.entries(cats)) {
-                html += `<div><label class="text-[10px] font-bold text-gray-600 uppercase tracking-tighter mb-1 block">${label}</label>
-                <input type="text" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-xl text-white escala-input outline-none focus:border-blue-500" data-cat="${label}" value="${lista.map(x=>x.nome).join(', ')}"></div>`;
+            document.getElementById('btnCad').innerText = "Processando...";
+            await fetch(API, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ action: "cadastrarMembro", nome, cat }) 
+            });
+            
+            alert("✅ Coroinha cadastrado com sucesso!");
+            document.getElementById('cadNome').value = "";
+            document.getElementById('btnCad').innerText = "✅ Salvar Coroinha";
+        }
+
+        // Gerar Escala
+        async function gerarEscala() {
+            const dataRaw = document.getElementById('dataEscala').value;
+            const hora = document.getElementById('horaEscala').value;
+            if(!dataRaw || !hora) return alert("Selecione data e hora para gerar a escala!");
+
+            const d = dataRaw.split("-");
+            const dataFmt = `${d[2]}/${d[1]}/${d[0]}`;
+
+            document.getElementById('btnGerar').innerText = "Sorteando...";
+            const resp = await fetch(API, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: "gerarEscala", dataMissa: dataFmt, horaMissa: hora }) 
+            });
+            escalaAtual = await resp.json();
+
+            let html = "";
+            const categorias = { 
+                "🔱 Acólitos": escalaAtual.acolitos, 
+                "⭐ Veteranos": escalaAtual.veteranos, 
+                "📚 Médios": escalaAtual.medios, 
+                "🌱 Novatos": escalaAtual.novatos 
+            };
+            for (const [label, pessoas] of Object.entries(categorias)) {
+                const nomes = pessoas.length > 0 ? pessoas.map(p => p.nome).join(', ') : 'Nenhum disponível';
+                html += `<div class="bg-gray-700/30 p-3 rounded-lg border-l-4 border-blue-400"><strong class="text-blue-300">${label}:</strong> <span class="text-gray-100">${nomes}</span></div>`;
             }
             document.getElementById('listaFinal').innerHTML = html;
             document.getElementById('resultadoEscala').classList.remove('hidden');
+            document.getElementById('btnGerar').innerText = "🎲 Sortear Disponíveis";
         }
 
-        // --- WHATSAPP MELHORADO (Apenas nomes, conforme solicitado) ---
+        // Enviar WhatsApp
         function enviarWhatsApp() {
-            const dRaw = document.getElementById('dataEscala').value.split("-");
-            const dFmt = `${dRaw[2]}/${dRaw[1]}/${dRaw[0]}`;
-            const h = document.getElementById('horaEscala').value;
-            
-            let texto = `*ESCALA DE COROINHAS*\n📅 ${dFmt} | ⏰ ${h}h\n\n`;
-            
-            // Pega os nomes de todos os inputs sem mostrar o nome da categoria
-            document.querySelectorAll('.escala-input').forEach(input => {
-                const nomes = input.value.trim();
-                if(nomes && nomes !== "---") {
-                    texto += `• ${nomes}\n`;
-                }
-            });
-            
-            const obs = document.getElementById('obs').value.trim();
+            const dataRaw = document.getElementById('dataEscala').value.split("-");
+            const dataFmt = `${dataRaw[2]}/${dataRaw[1]}/${dataRaw[0]}`;
+            const hora = document.getElementById('horaEscala').value;
+            const obs = document.getElementById('obs').value;
+
+            let texto = `*🎲 ESCALA DE COROINHAS*\n📅 ${dataFmt} | ⏰ ${hora}h\n\n`;
+            const categorias = { 
+                "🔱 Acólitos": escalaAtual.acolitos, 
+                "⭐ Veteranos": escalaAtual.veteranos, 
+                "📚 Médios": escalaAtual.medios, 
+                "🌱 Novatos": escalaAtual.novatos 
+            };
+            for (const [label, pessoas] of Object.entries(categorias)) {
+                texto += `*${label}:* ${pessoas.map(p => p.nome).join(', ') || 'Nenhum'}\n`;
+            }
             if(obs) texto += `\n⚠️ *Obs:* ${obs}`;
-            
-            window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
+            window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
         }
-
-        async function limparDados() { 
-            if(confirm("Deseja apagar todas as disponibilidades do mês?")) { 
-                await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "limparDisponibilidade"}) }); 
-                alert("Mês resetado!"); 
-            } 
-        }
-
-        window.onload = carregarListaRemover;
     </script>
 </body>
 </html>
