@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal do Coroinha ⛪</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="questions.js"></script>
+  <style>
+    body { background: #0f172a; }
+    .card { background: #1e293b; border: 1px solid #334155; }
+    .inp { background: #0f172a; border: 1px solid #475569; color: #e2e8f0; }
+    .inp:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 2px #6366f140; }
+    select.inp option { background: #1e293b; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 1s linear infinite; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal-anim { animation: fadeIn 0.2s ease; }
+    .btn-opcao.correct { background: #16a34a !important; border-color: #16a34a; }
+    .btn-opcao.wrong   { background: #dc2626 !important; border-color: #dc2626; }
+    .btn-opcao:disabled { cursor: default; opacity: 0.85; }
+  </style>
+</head>
+<body class="min-h-screen p-3 text-slate-200 font-sans">
+
+  <!-- ===== MODAL PADRE LUCIANO ===== -->
+  <div id="modalGlobal" role="dialog" aria-modal="true" aria-labelledby="modalTituloEl"
+       style="display:none"
+       class="fixed inset-0 z-50 items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="modal-anim card rounded-2xl shadow-2xl max-w-sm w-full p-5 flex flex-col items-center gap-3 max-h-screen overflow-y-auto">
+      <img id="modalImg" src="IMG_20260401_014539.jpg" alt="Padre Luciano"
+           class="w-24 h-24 rounded-full object-cover border-4 border-indigo-500 shadow-lg flex-shrink-0" />
+      <p id="modalFrase" class="text-center text-xs text-slate-400 italic leading-relaxed"></p>
+      <p id="modalTituloEl" style="display:none"
+         class="text-center font-bold text-indigo-300 text-base w-full"></p>
+
+      <!-- Loader -->
+      <div id="modalLoader" class="flex flex-col items-center gap-2">
+        <svg class="spinner w-10 h-10 text-indigo-400" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        <span id="modalStatus" class="text-sm text-slate-400">Aguarde…</span>
+      </div>
+
+      <!-- HTML content area -->
+      <div id="modalConteudo" style="display:none"
+           class="w-full max-h-72 overflow-y-auto text-sm text-slate-300 text-left leading-relaxed"></div>
+
+      <!-- Simple message -->
+      <p id="modalMensagem" style="display:none" class="text-center font-semibold text-base"></p>
+
+      <button id="modalFecharBtn" style="display:none"
+        class="mt-1 px-6 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        onclick="fecharModal()">OK</button>
+    </div>
+  </div>
+
+  <!-- ===== HEADER ===== -->
+  <div class="max-w-xl mx-auto mb-5">
+    <h1 class="text-2xl font-extrabold text-center text-indigo-400 tracking-tight">⛪ Portal do Coroinha</h1>
+    <p id="headerSub" class="text-center text-slate-500 text-xs mt-1">Bem-vindo(a)!</p>
+  </div>
+
+  <div class="max-w-xl mx-auto flex flex-col gap-5">
+
+    <!-- ===== LOGIN ===== -->
+    <section id="loginArea" class="card rounded-2xl p-5 shadow-lg">
+      <h2 class="text-lg font-bold text-indigo-300 mb-4">🔐 Entrar no Portal</h2>
+      <div class="flex flex-col gap-3">
+        <input id="nomeInput" type="text" placeholder="Digite seu nome (igual na lista)"
+               class="inp rounded-xl px-4 py-3 w-full text-sm" />
+        <button id="btnEntrar" onclick="validarNome()"
+          class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 focus:ring-2 focus:ring-indigo-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none">
+          Entrar ➜
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== PAINEL (hidden until login) ===== -->
+    <div id="painelArea" style="display:none" class="flex flex-col gap-5">
+
+      <!-- Saudação -->
+      <div class="card rounded-2xl p-4 shadow-lg flex items-center gap-3">
+        <img src="IMG_20260401_014539.jpg" alt="Padre Luciano"
+             class="w-12 h-12 rounded-full object-cover border-2 border-indigo-500 flex-shrink-0">
+        <div>
+          <p class="font-bold text-indigo-300" id="nomeExibido"></p>
+          <p class="text-xs text-slate-400">Que Deus te abençoe neste serviço!</p>
+        </div>
+      </div>
+
+      <!-- ===== DISPONIBILIDADE ===== -->
+      <section class="card rounded-2xl p-5 shadow-lg">
+        <h2 class="text-lg font-bold text-indigo-300 mb-4">📅 Minha Disponibilidade</h2>
+        <div id="dispoArea">
+          <div id="listaMissas" class="space-y-2 mb-4 max-h-60 overflow-y-auto"></div>
+          <button id="btnEnviar" onclick="enviarDispo()"
+            class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 focus:ring-2 focus:ring-emerald-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none hidden">
+            ✅ Confirmar Presença
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== LITURGIA & SANTOS ===== -->
+      <section class="card rounded-2xl p-5 shadow-lg">
+        <h2 class="text-lg font-bold text-indigo-300 mb-4">📖 Liturgia &amp; Santos</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="mostrarLiturgia()"
+            class="bg-blue-700 hover:bg-blue-600 active:bg-blue-800 focus:ring-2 focus:ring-blue-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+            📖 Liturgia do Dia
+          </button>
+          <button onclick="mostrarSanto()"
+            class="bg-amber-600 hover:bg-amber-500 active:bg-amber-700 focus:ring-2 focus:ring-amber-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+            ✨ Santo do Dia
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== ORAÇÕES ===== -->
+      <section class="card rounded-2xl p-5 shadow-lg">
+        <h2 class="text-lg font-bold text-indigo-300 mb-4">🙏 Orações</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="mostrarOracao('pai_nosso')"
+            class="bg-violet-700 hover:bg-violet-600 active:bg-violet-800 focus:ring-2 focus:ring-violet-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+            🕊️ Pai Nosso
+          </button>
+          <button onclick="mostrarOracao('ave_maria')"
+            class="bg-violet-700 hover:bg-violet-600 active:bg-violet-800 focus:ring-2 focus:ring-violet-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+            🌹 Ave Maria
+          </button>
+          <button onclick="mostrarOracao('salve_rainha')"
+            class="bg-violet-700 hover:bg-violet-600 active:bg-violet-800 focus:ring-2 focus:ring-violet-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+            👑 Salve Rainha
+          </button>
+          <button onclick="mostrarOracao('credo')"
+            class="bg-violet-700 hover:bg-violet-600 active:bg-violet-800 focus:ring-2 focus:ring-violet-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+            ✝️ Credo
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== PARA O COROINHA ===== -->
+      <section class="card rounded-2xl p-5 shadow-lg">
+        <h2 class="text-lg font-bold text-indigo-300 mb-4">⛪ Para o Coroinha</h2>
+        <div class="flex flex-col gap-3">
+          <button onclick="mostrarConteudo('dicas')"
+            class="w-full bg-teal-700 hover:bg-teal-600 active:bg-teal-800 focus:ring-2 focus:ring-teal-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+            💡 Dicas do Coroinha
+          </button>
+          <button onclick="mostrarConteudo('conduta')"
+            class="w-full bg-teal-700 hover:bg-teal-600 active:bg-teal-800 focus:ring-2 focus:ring-teal-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+            📋 Conduta no Altar
+          </button>
+          <button onclick="mostrarConteudo('levar')"
+            class="w-full bg-teal-700 hover:bg-teal-600 active:bg-teal-800 focus:ring-2 focus:ring-teal-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+            🎒 O que Levar para a Missa
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== QUIZ ===== -->
+      <section id="quizSection" class="card rounded-2xl p-5 shadow-lg mb-6">
+        <h2 class="text-lg font-bold text-indigo-300 mb-1">🎓 Quiz da Fé</h2>
+        <p class="text-xs text-slate-400 mb-4">10 perguntas por dia · Pontuação mensal</p>
+
+        <!-- Stats Bar -->
+        <div class="flex gap-3 mb-4">
+          <div class="flex-1 bg-slate-900 rounded-xl p-3 text-center">
+            <p class="text-xs text-slate-400">Hoje</p>
+            <p class="font-bold text-indigo-300" id="quizHoje">0/10</p>
+          </div>
+          <div class="flex-1 bg-slate-900 rounded-xl p-3 text-center">
+            <p class="text-xs text-slate-400">Pontos (mês)</p>
+            <p class="font-bold text-amber-400" id="quizPontos">0</p>
+          </div>
+          <div class="flex-1 bg-slate-900 rounded-xl p-3 text-center">
+            <p class="text-xs text-slate-400">Acertos (mês)</p>
+            <p class="font-bold text-emerald-400" id="quizAcertos">0</p>
+          </div>
+        </div>
+
+        <!-- Idle state -->
+        <div id="quizIdle">
+          <div class="flex gap-3">
+            <button id="btnIniciarQuiz" onclick="iniciarQuiz()"
+              class="flex-1 bg-rose-600 hover:bg-rose-500 active:bg-rose-700 focus:ring-2 focus:ring-rose-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none">
+              🎲 Iniciar Quiz
+            </button>
+            <button onclick="mostrarRanking()"
+              class="flex-1 bg-slate-600 hover:bg-slate-500 active:bg-slate-700 focus:ring-2 focus:ring-slate-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none">
+              🏆 Ranking
+            </button>
+          </div>
+        </div>
+
+        <!-- Active quiz -->
+        <div id="quizAtivo" style="display:none">
+          <div class="flex justify-between text-xs text-slate-400 mb-3">
+            <span id="quizNumero"></span>
+            <span id="quizCategoria" class="text-indigo-400 font-semibold"></span>
+          </div>
+          <p id="quizPergunta" class="text-sm font-semibold text-slate-200 mb-4 leading-relaxed"></p>
+          <div id="quizOpcoes" class="flex flex-col gap-2"></div>
+          <button onclick="cancelarQuiz()"
+            class="mt-4 w-full text-xs text-slate-500 hover:text-slate-400 focus:outline-none">
+            × Encerrar sessão
+          </button>
+        </div>
+      </section>
+
+    </div><!-- /painelArea -->
+  </div><!-- /max-w-xl -->
+
+  <script>
+    // ── Config ────────────────────────────────────────────────────
+    var URL_API = "https://script.google.com/macros/s/AKfycbzyDSWSVz3TiNVB6YxflRpAlRVD6ox6D47T5pJGUWagjGEF9qX_idUOvQe1ZiZjl5ZdOg/exec";
+    var LITURGIA_API = "https://liturgia.up.railway.app/";
+    var SANTOS_API = "https://calapi.inadiutorium.cz/api/v0/pt/calendars/general-la/";
+
+    var FRASES = [
+      '"Tudo posso naquele que me fortalece." — Fl 4,13',
+      '"O Senhor é meu pastor e nada me faltará." — Sl 23,1',
+      '"Vinde a mim todos os que estais cansados." — Mt 11,28',
+      '"Quem serve a mim, meu Pai o honrará." — Jo 12,26',
+      '"Não temas, porque eu sou contigo." — Is 41,10',
+      '"Ide e fazei discípulos de todas as nações." — Mt 28,19',
+      '"Servi ao Senhor com alegria." — Sl 100,2',
+      '"Que serve ao altar, do altar deve viver." — 1Cor 9,13',
+      '"Deus é amor." — 1Jo 4,8',
+      '"Alegrai-vos sempre no Senhor." — Fl 4,4',
+      '"Ora et Labora" — São Bento de Núrsia',
+      '"Fazer o bem é uma doce necessidade." — São Francisco de Sales',
+    ];
+
+    var nomeUsuario = "";
+    var quizSession = null;
+
+    // ── Modal Helpers ─────────────────────────────────────────────
+    function _setFrase() {
+      document.getElementById('modalFrase').textContent =
+        FRASES[Math.floor(Math.random() * FRASES.length)];
+    }
+
+    function _resetModal() {
+      _setFrase();
+      document.getElementById('modalLoader').style.display = 'none';
+      document.getElementById('modalConteudo').style.display = 'none';
+      document.getElementById('modalMensagem').style.display = 'none';
+      document.getElementById('modalTituloEl').style.display = 'none';
+      var btn = document.getElementById('modalFecharBtn');
+      btn.style.display = 'none';
+      btn.textContent = 'OK';
+      btn.onclick = fecharModal;
+    }
+
+    function abrirModalLoader(status) {
+      _resetModal();
+      document.getElementById('modalLoader').style.display = 'flex';
+      document.getElementById('modalStatus').textContent = status || 'Aguarde…';
+      document.getElementById('modalGlobal').style.display = 'flex';
+    }
+
+    function abrirModalConteudo(titulo, htmlContent) {
+      _resetModal();
+      var tit = document.getElementById('modalTituloEl');
+      tit.textContent = titulo;
+      tit.style.display = 'block';
+      var cont = document.getElementById('modalConteudo');
+      cont.innerHTML = htmlContent;
+      cont.style.display = 'block';
+      var btn = document.getElementById('modalFecharBtn');
+      btn.style.display = 'inline-block';
+      document.getElementById('modalGlobal').style.display = 'flex';
+      btn.focus();
+    }
+
+    function abrirModalMensagem(msg, tipo) {
+      _resetModal();
+      var msgEl = document.getElementById('modalMensagem');
+      msgEl.textContent = msg;
+      msgEl.className = 'text-center font-semibold text-base ' + (
+        tipo === 'erro'  ? 'text-rose-400'   :
+        tipo === 'aviso' ? 'text-yellow-400' :
+        'text-emerald-400'
+      );
+      msgEl.style.display = 'block';
+      var btn = document.getElementById('modalFecharBtn');
+      btn.style.display = 'inline-block';
+      document.getElementById('modalGlobal').style.display = 'flex';
+      btn.focus();
+    }
+
+    function fecharModal() {
+      document.getElementById('modalGlobal').style.display = 'none';
+    }
+
+    // Close on Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') fecharModal();
+    });
+
+    // ── Login & Disponibilidade ────────────────────────────────────
+    async function validarNome() {
+      var nome = document.getElementById('nomeInput').value.trim();
+      if (!nome) { abrirModalMensagem('Por favor, digite seu nome!', 'aviso'); return; }
+      var btn = document.getElementById('btnEntrar');
+      btn.textContent = 'Verificando…';
+      btn.disabled = true;
+      abrirModalLoader('Verificando nome…');
+      try {
+        var resp = await fetch(URL_API + '?nome=' + encodeURIComponent(nome));
+        var data = await resp.json();
+        if (data.existe) {
+          nomeUsuario = nome;
+          fecharModal();
+          mostrarPainel(nome, data.config);
+        } else {
+          btn.textContent = 'Entrar ➜';
+          btn.disabled = false;
+          abrirModalMensagem('Nome não encontrado! Digite exatamente como o coordenador cadastrou.', 'erro');
+        }
+      } catch (e) {
+        btn.textContent = 'Entrar ➜';
+        btn.disabled = false;
+        abrirModalMensagem('Erro de conexão. Verifique sua internet e tente novamente.', 'erro');
+      }
+    }
+
+    function mostrarPainel(nome, config) {
+      document.getElementById('loginArea').style.display = 'none';
+      document.getElementById('painelArea').style.display = 'flex';
+      document.getElementById('nomeExibido').textContent = '✋ Olá, ' + nome + '!';
+      document.getElementById('headerSub').textContent = 'Bem-vindo(a) ao portal, ' + nome + '!';
+      carregarMissas(config);
+      atualizarQuizUI();
+    }
+
+    function carregarMissas(config) {
+      if (!config || !config.datas || !config.horas || !config.datas.length || !config.horas.length) {
+        document.getElementById('listaMissas').innerHTML =
+          '<p class="text-slate-500 italic text-sm text-center py-3">Nenhuma missa disponível no momento.</p>';
+        return;
+      }
+      var html = '';
+      config.datas.forEach(function(d) {
+        config.horas.forEach(function(h) {
+          html += '<label class="flex items-center p-3 bg-slate-900 rounded-xl cursor-pointer hover:bg-slate-800 transition-all gap-3">' +
+            '<input type="checkbox" class="missa-item w-5 h-5 text-indigo-600 rounded flex-shrink-0" data-d="' + d + '" data-h="' + h + '">' +
+            '<span class="text-sm font-semibold text-slate-300">' + d + ' — ' + h + 'h</span>' +
+            '</label>';
+        });
+      });
+      document.getElementById('listaMissas').innerHTML = html;
+      document.getElementById('btnEnviar').classList.remove('hidden');
+    }
+
+    async function enviarDispo() {
+      var checks = document.querySelectorAll('.missa-item:checked');
+      if (checks.length === 0) { abrirModalMensagem('Selecione pelo menos uma data!', 'aviso'); return; }
+      var selecoes = Array.from(checks).map(function(i) { return { data: i.dataset.d, hora: i.dataset.h }; });
+      abrirModalLoader('Enviando disponibilidade…');
+      try {
+        await fetch(URL_API, {
+          method: 'POST', mode: 'no-cors',
+          body: JSON.stringify({ action: "salvarDisponibilidade", nome: nomeUsuario, selecoes: selecoes })
+        });
+        document.getElementById('dispoArea').innerHTML =
+          '<div class="text-center py-6 text-emerald-400 font-bold text-sm">✅ Presença enviada com sucesso!</div>';
+        abrirModalMensagem('✅ Disponibilidade confirmada com sucesso!', 'sucesso');
+      } catch (e) {
+        abrirModalMensagem('Erro ao enviar: ' + (e.message || e), 'erro');
+      }
+    }
+
+    // ── Liturgia & Santos ─────────────────────────────────────────
+    async function mostrarLiturgia() {
+      var hoje = new Date();
+      var d = String(hoje.getDate()).padStart(2,'0');
+      var m = String(hoje.getMonth()+1).padStart(2,'0');
+      var y = hoje.getFullYear();
+      abrirModalLoader('Buscando liturgia do dia…');
+      try {
+      var resp = await fetch(LITURGIA_API, { signal: AbortSignal.timeout(7000) });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        var data = await resp.json();
+        var html = '<div class="space-y-2">';
+        if (data.data) html += '<p class="text-indigo-300 font-bold text-sm">' + esc(data.data) + '</p>';
+        if (data.liturgia) html += '<p class="font-semibold text-amber-400 text-sm">' + esc(data.liturgia) + '</p>';
+        if (data.cor) html += '<p class="text-xs text-slate-400">Cor litúrgica: <span class="text-slate-300">' + esc(data.cor) + '</span></p>';
+        if (data.primeiraLeitura && data.primeiraLeitura.titulo) {
+          html += '<div class="mt-2 bg-slate-900 rounded-lg p-2"><p class="text-xs font-bold text-indigo-300 uppercase">1ª Leitura</p>' +
+            '<p class="text-xs text-slate-400 mt-1">' + esc(data.primeiraLeitura.titulo) + '</p>';
+          if (data.primeiraLeitura.texto) html += '<p class="text-xs text-slate-500 mt-1 italic line-clamp-3">' + esc(truncarTexto(data.primeiraLeitura.texto, 200)) + '…</p>';
+          html += '</div>';
+        }
+        if (data.segundaLeitura && data.segundaLeitura.titulo) {
+          html += '<div class="mt-1 bg-slate-900 rounded-lg p-2"><p class="text-xs font-bold text-indigo-300 uppercase">2ª Leitura</p>' +
+            '<p class="text-xs text-slate-400 mt-1">' + esc(data.segundaLeitura.titulo) + '</p></div>';
+        }
+        if (data.evangelho && data.evangelho.titulo) {
+          html += '<div class="mt-1 bg-slate-900 rounded-lg p-2"><p class="text-xs font-bold text-amber-400 uppercase">Evangelho</p>' +
+            '<p class="text-xs text-slate-400 mt-1">' + esc(data.evangelho.titulo) + '</p>';
+          if (data.evangelho.texto) html += '<p class="text-xs text-slate-500 mt-1 italic">' + esc(truncarTexto(data.evangelho.texto, 200)) + '…</p>';
+          html += '</div>';
+        }
+        html += '</div>';
+        abrirModalConteudo('📖 Liturgia do Dia — ' + d + '/' + m + '/' + y, html);
+      } catch (err) {
+        abrirModalConteudo('📖 Liturgia do Dia — ' + d + '/' + m + '/' + y,
+          '<div class="space-y-3 text-center">' +
+          '<p class="text-amber-400 font-semibold text-sm">A liturgia online não está disponível no momento.</p>' +
+          '<p class="text-slate-400 text-xs">Acesse o site da CNBB para as leituras do dia:</p>' +
+          '<a href="https://www.cnbb.org.br/liturgia-diaria/" target="_blank" rel="noopener noreferrer"' +
+          '   class="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold mt-1">' +
+          '🔗 CNBB — Liturgia Diária</a>' +
+          '<p class="text-slate-500 text-xs mt-2">Ou acesse: evangelizo.org</p></div>');
+      }
+    }
+
+    async function mostrarSanto() {
+      var hoje = new Date();
+      var d = String(hoje.getDate()).padStart(2,'0');
+      var m = String(hoje.getMonth()+1).padStart(2,'0');
+      abrirModalLoader('Buscando santo do dia…');
+      try {
+        var resp = await fetch(
+          SANTOS_API + hoje.getFullYear() + '/' + (hoje.getMonth()+1) + '/' + hoje.getDate(),
+          { signal: AbortSignal.timeout(7000) }
+        );
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        var data = await resp.json();
+        var html = '<div class="space-y-2">';
+        if (data.season_name) html += '<p class="text-xs text-slate-400">Tempo Litúrgico: <span class="text-indigo-300 font-semibold">' + esc(data.season_name) + '</span></p>';
+        if (data.celebrations && data.celebrations.length) {
+          html += '<p class="font-bold text-amber-400 text-sm mt-2">Santos do dia:</p>';
+          data.celebrations.forEach(function(c) {
+            html += '<div class="bg-slate-900 rounded-lg p-3 mt-1">' +
+              '<p class="font-semibold text-slate-200 text-sm">⭐ ' + esc(c.name || c.title || '') + '</p>';
+            if (c.colour) html += '<p class="text-xs text-slate-400 mt-1">Cor: ' + esc(c.colour) + '</p>';
+            if (c.rank) html += '<p class="text-xs text-slate-400">Grau: ' + esc(c.rank) + '</p>';
+            html += '</div>';
+          });
+        }
+        html += '</div>';
+        abrirModalConteudo('✨ Santo do Dia — ' + d + '/' + m, html);
+      } catch (err) {
+        // Fallback with static data
+        var SANTOS = {
+          '01-01':'Maria Santíssima, Mãe de Deus','01-06':'Epifania do Senhor',
+          '01-17':'Santo Antão, Abade','01-24':'São Francisco de Sales',
+          '01-28':'São Tomás de Aquino','02-02':'Apresentação do Senhor',
+          '02-14':'Santos Cirilo e Metódio','02-22':'Cátedra de São Pedro',
+          '03-17':'São Patrício','03-19':'São José','03-25':'Anunciação do Senhor',
+          '04-23':'São Jorge','04-25':'São Marcos, Evangelista',
+          '05-01':'São José Operário','05-03':'Santos Filipe e Tiago',
+          '05-26':'São Filipe Néri','06-13':'Santo Antônio de Pádua',
+          '06-24':'Natividade de São João Batista','06-29':'Santos Pedro e Paulo',
+          '07-03':'São Tomé, Apóstolo','07-16':'Nossa Senhora do Carmo',
+          '07-22':'Santa Maria Madalena','07-25':'São Tiago, Apóstolo',
+          '07-26':'Santos Joaquim e Ana','08-04':'São João Maria Vianney',
+          '08-06':'Transfiguração do Senhor','08-10':'São Lourenço',
+          '08-15':'Assunção de Nossa Senhora','08-22':'Coroação de Nossa Senhora',
+          '08-28':'Santo Agostinho','09-08':'Natividade de Nossa Senhora',
+          '09-14':'Exaltação da Santa Cruz','09-15':'Nossa Senhora das Dores',
+          '09-21':'São Mateus, Apóstolo','09-29':'Santos Miguel, Gabriel e Rafael',
+          '10-02':'Santos Anjos da Guarda','10-04':'São Francisco de Assis',
+          '10-07':'Nossa Senhora do Rosário','10-15':'Santa Teresa de Ávila',
+          '10-18':'São Lucas, Evangelista','11-01':'Todos os Santos',
+          '11-02':'Fiéis Defuntos','11-11':'São Martinho de Tours',
+          '11-21':'Apresentação de Nossa Senhora','11-22':'Santa Cecília',
+          '12-03':'São Francisco Xavier','12-08':'Imaculada Conceição',
+          '12-12':'Nossa Senhora de Guadalupe','12-25':'Natal do Senhor',
+          '12-26':'Santo Estêvão','12-27':'São João, Apóstolo',
+          '12-28':'Santos Inocentes'
+        };
+        var key = m + '-' + d;
+        var santo = SANTOS[key] || 'Consulte o calendário litúrgico para o santo de hoje.';
+        abrirModalConteudo('✨ Santo do Dia — ' + d + '/' + m,
+          '<div class="space-y-3">' +
+          '<div class="bg-slate-900 rounded-xl p-4 text-center">' +
+          '<p class="text-4xl mb-2">⭐</p>' +
+          '<p class="font-bold text-amber-400 text-base">' + esc(santo) + '</p>' +
+          '<p class="text-xs text-slate-500 mt-2">' + d + '/' + m + '</p></div>' +
+          '<p class="text-xs text-slate-400 text-center">Para mais detalhes consulte o Calendário Litúrgico em cnbb.org.br</p>' +
+          '</div>');
+      }
+    }
+
+    // ── Orações ───────────────────────────────────────────────────
+    var ORACOES = {
+      pai_nosso: {
+        titulo: '🕊️ Pai Nosso',
+        html: '<div class="space-y-1 text-sm text-slate-200 leading-relaxed text-center italic">' +
+          '<p>Pai Nosso que estais nos céus,</p>' +
+          '<p>santificado seja o Vosso nome,</p>' +
+          '<p>venha a nós o Vosso reino,</p>' +
+          '<p>seja feita a Vossa vontade,</p>' +
+          '<p>assim na terra como no céu.</p>' +
+          '<p class="mt-3">O pão nosso de cada dia nos dai hoje,</p>' +
+          '<p>perdoai-nos as nossas ofensas,</p>' +
+          '<p>assim como nós perdoamos</p>' +
+          '<p>a quem nos tem ofendido;</p>' +
+          '<p>e não nos deixeis cair em tentação,</p>' +
+          '<p>mas livrai-nos do mal. Amém.</p>' +
+          '</div>'
+      },
+      ave_maria: {
+        titulo: '🌹 Ave Maria',
+        html: '<div class="space-y-1 text-sm text-slate-200 leading-relaxed text-center italic">' +
+          '<p>Ave Maria, cheia de graça,</p>' +
+          '<p>o Senhor é convosco,</p>' +
+          '<p>bendita sois vós entre as mulheres,</p>' +
+          '<p>e bendito é o fruto do vosso ventre, Jesus.</p>' +
+          '<p class="mt-3">Santa Maria, Mãe de Deus,</p>' +
+          '<p>rogai por nós pecadores,</p>' +
+          '<p>agora e na hora da nossa morte. Amém.</p>' +
+          '</div>'
+      },
+      salve_rainha: {
+        titulo: '👑 Salve Rainha',
+        html: '<div class="space-y-1 text-sm text-slate-200 leading-relaxed text-center italic">' +
+          '<p>Salve, Rainha, Mãe de misericórdia,</p>' +
+          '<p>vida, doçura e esperança nossa, salve!</p>' +
+          '<p class="mt-3">A vós bradamos, os degredados filhos de Eva.</p>' +
+          '<p>A vós suspiramos, gemendo e chorando</p>' +
+          '<p>neste vale de lágrimas.</p>' +
+          '<p class="mt-3">Eia, pois, advogada nossa,</p>' +
+          '<p>esses vossos olhos misericordiosos</p>' +
+          '<p>a nós volvei.</p>' +
+          '<p class="mt-3">E depois deste desterro,</p>' +
+          '<p>mostrai-nos Jesus,</p>' +
+          '<p>bendito fruto do vosso ventre.</p>' +
+          '<p class="mt-3">Ó clemente! Ó piedosa!</p>' +
+          '<p>Ó doce sempre Virgem Maria! Amém.</p>' +
+          '</div>'
+      },
+      credo: {
+        titulo: '✝️ Credo Apostólico',
+        html: '<div class="space-y-1 text-sm text-slate-200 leading-relaxed text-center italic">' +
+          '<p>Creio em Deus Pai todo-poderoso,</p>' +
+          '<p>criador do céu e da terra.</p>' +
+          '<p class="mt-3">E em Jesus Cristo, seu único Filho, nosso Senhor,</p>' +
+          '<p>que foi concebido pelo poder do Espírito Santo,</p>' +
+          '<p>nasceu da Virgem Maria,</p>' +
+          '<p>padeceu sob Pôncio Pilatos,</p>' +
+          '<p>foi crucificado, morto e sepultado,</p>' +
+          '<p>desceu à mansão dos mortos,</p>' +
+          '<p>ressuscitou ao terceiro dia,</p>' +
+          '<p>subiu aos céus,</p>' +
+          '<p>está sentado à direita de Deus Pai todo-poderoso,</p>' +
+          '<p>donde há de vir a julgar os vivos e os mortos.</p>' +
+          '<p class="mt-3">Creio no Espírito Santo,</p>' +
+          '<p>na santa Igreja Católica,</p>' +
+          '<p>na comunhão dos santos,</p>' +
+          '<p>na remissão dos pecados,</p>' +
+          '<p>na ressurreição da carne,</p>' +
+          '<p>na vida eterna. Amém.</p>' +
+          '</div>'
+      }
+    };
+
+    function mostrarOracao(chave) {
+      var o = ORACOES[chave];
+      if (!o) return;
+      abrirModalConteudo(o.titulo, o.html);
+    }
+
+    // ── Conteúdos do Coroinha ─────────────────────────────────────
+    var CONTEUDOS = {
+      dicas: {
+        titulo: '💡 Dicas do Coroinha',
+        html: '<div class="space-y-3 text-sm text-slate-300">' +
+          '<div class="bg-slate-900 rounded-lg p-3">' +
+          '<p class="font-bold text-indigo-300">🙏 Antes da Missa</p>' +
+          '<ul class="mt-2 space-y-1 text-xs text-slate-400 list-disc list-inside">' +
+          '<li>Chegue pelo menos 15 minutos antes</li>' +
+          '<li>Prepare a credência com os objetos necessários</li>' +
+          '<li>Vista a alva com cuidado e compostura</li>' +
+          '<li>Faça uma oração antes de entrar no altar</li>' +
+          '</ul></div>' +
+          '<div class="bg-slate-900 rounded-lg p-3">' +
+          '<p class="font-bold text-indigo-300">⛪ Durante a Missa</p>' +
+          '<ul class="mt-2 space-y-1 text-xs text-slate-400 list-disc list-inside">' +
+          '<li>Mantenha postura reverente e atenta</li>' +
+          '<li>Fique atento às orientações do padre</li>' +
+          '<li>Genuflexão ao passar pelo sacrário</li>' +
+          '<li>Segure o missal firme durante as leituras</li>' +
+          '<li>Toque o sino com suavidade na consagração</li>' +
+          '</ul></div>' +
+          '<div class="bg-slate-900 rounded-lg p-3">' +
+          '<p class="font-bold text-indigo-300">✅ Após a Missa</p>' +
+          '<ul class="mt-2 space-y-1 text-xs text-slate-400 list-disc list-inside">' +
+          '<li>Guarde os objetos litúrgicos nos lugares corretos</li>' +
+          '<li>Dobre a alva e guarde adequadamente</li>' +
+          '<li>Apague as velas se necessário</li>' +
+          '<li>Agradeça a Deus pelo serviço prestado</li>' +
+          '</ul></div></div>'
+      },
+      conduta: {
+        titulo: '📋 Conduta no Altar',
+        html: '<div class="space-y-3 text-sm text-slate-300">' +
+          '<div class="bg-slate-900 rounded-lg p-3">' +
+          '<p class="font-bold text-rose-400">⚠️ Sempre Evite</p>' +
+          '<ul class="mt-2 space-y-1 text-xs text-slate-400 list-disc list-inside">' +
+          '<li>Conversar ou rir durante a celebração</li>' +
+          '<li>Usar o celular no altar</li>' +
+          '<li>Andar sem necessidade durante a Missa</li>' +
+          '<li>Tocar objetos sagrados sem autorização</li>' +
+          '<li>Virar as costas para o altar sem reverência</li>' +
+          '</ul></div>' +
+          '<div class="bg-slate-900 rounded-lg p-3">' +
+          '<p class="font-bold text-emerald-400">✅ Sempre Faça</p>' +
+          '<ul class="mt-2 space-y-1 text-xs text-slate-400 list-disc list-inside">' +
+          '<li>Mantenha a cabeça erguida e o olhar atento</li>' +
+          '<li>Genuflexão ao passar pelo sacrário</li>' +
+          '<li>Inclinação ao passar pelo altar</li>' +
+          '<li>Acompanhe o ritmo da celebração</li>' +
+          '<li>Sirva com humildade e alegria</li>' +
+          '</ul></div>' +
+          '<div class="bg-slate-900 rounded-lg p-3">' +
+          '<p class="font-bold text-indigo-300">📿 Atitude Interior</p>' +
+          '<p class="text-xs text-slate-400 mt-2">O coroinha não é apenas um auxiliar técnico. É um servidor de Deus. Sua presença no altar é uma vocação e uma honra. Sirva com fé, amor e devoção.</p>' +
+          '</div></div>'
+      },
+      levar: {
+        titulo: '🎒 O que Levar para a Missa',
+        html: '<div class="space-y-3 text-sm text-slate-300">' +
+          '<div class="bg-slate-900 rounded-lg p-3">' +
+          '<p class="font-bold text-indigo-300">👕 Vestimenta</p>' +
+          '<ul class="mt-2 space-y-1 text-xs text-slate-400 list-disc list-inside">' +
+          '<li>Alva (limpa e bem conservada)</li>' +
+          '<li>Cíngulo (corda branca)</li>' +
+          '<li>Vestes pessoais limpas e discretas</li>' +
+          '<li>Calçado adequado (não chinelo/sandália)</li>' +
+          '</ul></div>' +
+          '<div class="bg-slate-900 rounded-lg p-3">' +
+          '<p class="font-bold text-indigo-300">📚 Materiais</p>' +
+          '<ul class="mt-2 space-y-1 text-xs text-slate-400 list-disc list-inside">' +
+          '<li>Caderneta de escala (se houver)</li>' +
+          '<li>Missal romano (se for seu)</li>' +
+          '</ul></div>' +
+          '<div class="bg-slate-900 rounded-lg p-3">' +
+          '<p class="font-bold text-indigo-300">🙏 Atitude</p>' +
+          '<ul class="mt-2 space-y-1 text-xs text-slate-400 list-disc list-inside">' +
+          '<li>Coração disposto a servir</li>' +
+          '<li>Oração antes de sair de casa</li>' +
+          '<li>Pontualidade — chegue antes!</li>' +
+          '<li>Respeito pelo lugar sagrado</li>' +
+          '</ul></div>' +
+          '<div class="bg-slate-900 rounded-lg p-3">' +
+          '<p class="font-bold text-rose-400">🚫 Não Leve</p>' +
+          '<ul class="mt-2 space-y-1 text-xs text-slate-400 list-disc list-inside">' +
+          '<li>Celular (ou deixe no silencioso/desligado)</li>' +
+          '<li>Alimentos ou bebidas</li>' +
+          '<li>Fones de ouvido</li>' +
+          '</ul></div></div>'
+      }
+    };
+
+    function mostrarConteudo(chave) {
+      var c = CONTEUDOS[chave];
+      if (!c) return;
+      abrirModalConteudo(c.titulo, c.html);
+    }
+
+    // ── Segurança: escape HTML ────────────────────────────────────
+    function esc(str) {
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+
+    // Trunca texto no limite de palavras para evitar cortar caracteres multibyte
+    function truncarTexto(str, maxLen) {
+      if (!str || str.length <= maxLen) return str || '';
+      var cortado = str.substring(0, maxLen);
+      var ultimoEspaco = cortado.lastIndexOf(' ');
+      return ultimoEspaco > 0 ? cortado.substring(0, ultimoEspaco) : cortado;
+    }
+
+    // ── Quiz ──────────────────────────────────────────────────────
+    var QUIZ_KEY = 'coroinhas_quiz_v1';
+    var MAX_POR_DIA = 10;
+    var PONTOS_CERTO = 10;
+    var SESSAO_TAMANHO = 5;
+
+    function dataHoje() {
+      var d = new Date();
+      return d.getFullYear() + '-' +
+        String(d.getMonth()+1).padStart(2,'0') + '-' +
+        String(d.getDate()).padStart(2,'0');
+    }
+
+    function mesAtual() {
+      var d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    }
+
+    // Fisher-Yates shuffle algorithm
+    function embaralhar(arr) {
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+      }
+      return arr;
+    }
+
+    function getEstado() {
+      var state = null;
+      try { state = JSON.parse(localStorage.getItem(QUIZ_KEY)); } catch (e) {
+        // Dados corrompidos — será criado um estado novo
+        state = null;
+      }
+      var hoje = dataHoje();
+      var mes = mesAtual();
+      if (!state) {
+        state = {
+          questionOrder: embaralhar(Array.from({length: QUIZ_QUESTIONS.length}, function(_,i){ return i; })),
+          orderIndex: 0,
+          today: hoje, questionsToday: 0,
+          month: mes, totalCorrect: 0, totalWrong: 0, points: 0, daysPlayed: []
+        };
+      } else {
+        if (state.month !== mes) {
+          state.month = mes;
+          state.totalCorrect = 0; state.totalWrong = 0;
+          state.points = 0; state.daysPlayed = [];
+        }
+        if (state.today !== hoje) {
+          state.today = hoje;
+          state.questionsToday = 0;
+        }
+      }
+      return state;
+    }
+
+    function salvarEstado(state) {
+      try { localStorage.setItem(QUIZ_KEY, JSON.stringify(state)); } catch(e) {
+        // Quota excedida ou armazenamento indisponível — progresso pode não ser salvo
+        console.warn('Quiz: não foi possível salvar o progresso.', e);
+      }
+    }
+
+    function atualizarQuizUI() {
+      var state = getEstado();
+      document.getElementById('quizHoje').textContent = state.questionsToday + '/' + MAX_POR_DIA;
+      document.getElementById('quizPontos').textContent = state.points;
+      document.getElementById('quizAcertos').textContent = state.totalCorrect;
+      var btn = document.getElementById('btnIniciarQuiz');
+      if (state.questionsToday >= MAX_POR_DIA) {
+        btn.textContent = '✅ Limite diário atingido';
+        btn.disabled = true;
+        btn.className = 'flex-1 bg-slate-600 cursor-not-allowed text-slate-400 font-bold py-3 rounded-xl text-sm';
+      } else {
+        btn.textContent = '🎲 Iniciar Quiz';
+        btn.disabled = false;
+        btn.className = 'flex-1 bg-rose-600 hover:bg-rose-500 active:bg-rose-700 focus:ring-2 focus:ring-rose-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none';
+      }
+    }
+
+    function iniciarQuiz() {
+      var state = getEstado();
+      if (state.questionsToday >= MAX_POR_DIA) {
+        abrirModalConteudo('🎓 Quiz da Fé',
+          '<div class="text-center space-y-3">' +
+          '<p class="text-4xl">✅</p>' +
+          '<p class="font-bold text-emerald-400">Você já respondeu ' + MAX_POR_DIA + ' perguntas hoje!</p>' +
+          '<p class="text-slate-400 text-xs">Volte amanhã para continuar.</p>' +
+          '<div class="bg-slate-900 rounded-xl p-3 mt-2">' +
+          '<p class="text-xs text-slate-400">Pontos do mês: <span class="font-bold text-amber-400">' + state.points + '</span></p>' +
+          '<p class="text-xs text-slate-400 mt-1">Acertos: <span class="font-bold text-emerald-400">' + state.totalCorrect + '</span></p>' +
+          '</div></div>');
+        return;
+      }
+
+      var restante = MAX_POR_DIA - state.questionsToday;
+      var qtd = Math.min(restante, SESSAO_TAMANHO);
+
+      var indices = [];
+      var idx = state.orderIndex || 0;
+      for (var i = 0; i < qtd; i++) {
+        if (idx >= state.questionOrder.length) {
+          state.questionOrder = embaralhar(Array.from({length: QUIZ_QUESTIONS.length}, function(_,j){ return j; }));
+          idx = 0;
+        }
+        indices.push(state.questionOrder[idx]);
+        idx++;
+      }
+      state.orderIndex = idx;
+      salvarEstado(state);
+
+      var perguntas = indices.map(function(i) { return QUIZ_QUESTIONS[i]; });
+      quizSession = { questions: perguntas, current: 0, correct: 0, wrong: 0 };
+
+      document.getElementById('quizIdle').style.display = 'none';
+      document.getElementById('quizAtivo').style.display = 'block';
+      mostrarPergunta();
+    }
+
+    function mostrarPergunta() {
+      if (!quizSession) return;
+      var q = quizSession.questions[quizSession.current];
+      if (!q) { finalizarSessao(); return; }
+      var letras = ['A','B','C','D'];
+      document.getElementById('quizNumero').textContent =
+        'Pergunta ' + (quizSession.current + 1) + ' de ' + quizSession.questions.length;
+      document.getElementById('quizCategoria').textContent = q.c;
+      document.getElementById('quizPergunta').textContent = q.q;
+      var opcoes = document.getElementById('quizOpcoes');
+      opcoes.innerHTML = q.o.map(function(opt, i) {
+        return '<button class="btn-opcao w-full text-left px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 ' +
+          'text-sm font-medium text-slate-200 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400 border border-transparent" ' +
+          'data-idx="' + i + '" onclick="responderQuiz(' + i + ')">' +
+          '<span class="text-indigo-400 font-bold mr-2">' + letras[i] + ')</span>' + esc(opt) +
+          '</button>';
+      }).join('');
+    }
+
+    function responderQuiz(escolha) {
+      if (!quizSession) return;
+      var q = quizSession.questions[quizSession.current];
+      var correto = (escolha === q.a);
+      var letras = ['A','B','C','D'];
+
+      // Highlight buttons
+      document.querySelectorAll('.btn-opcao').forEach(function(btn) {
+        btn.disabled = true;
+        var idx = parseInt(btn.dataset.idx, 10);
+        if (idx === q.a) { btn.classList.add('correct'); }
+        else if (idx === escolha && !correto) { btn.classList.add('wrong'); }
+      });
+
+      if (correto) quizSession.correct++; else quizSession.wrong++;
+      quizSession.current++;
+
+      var state = getEstado();
+      state.questionsToday++;
+      if (correto) { state.totalCorrect++; state.points += PONTOS_CERTO; }
+      else { state.totalWrong++; }
+      if (state.daysPlayed.indexOf(state.today) === -1) state.daysPlayed.push(state.today);
+      salvarEstado(state);
+      atualizarQuizUI();
+
+      // Show feedback in modal
+      _resetModal();
+      var feedbackHtml = correto
+        ? '<div class="text-center space-y-2">' +
+          '<p class="text-5xl">🎉</p>' +
+          '<p class="font-bold text-emerald-400 text-lg">Correto!</p>' +
+          '<p class="text-xs text-slate-400">+' + PONTOS_CERTO + ' pontos</p>' +
+          '<div class="bg-slate-900 rounded-xl p-3 mt-2 text-xs">' +
+          '<p class="text-slate-400">Resposta: <span class="text-emerald-400 font-bold">' +
+          letras[q.a] + ') ' + esc(q.o[q.a]) + '</span></p></div></div>'
+        : '<div class="text-center space-y-2">' +
+          '<p class="text-5xl">😔</p>' +
+          '<p class="font-bold text-rose-400 text-lg">Errado!</p>' +
+          '<div class="bg-slate-900 rounded-xl p-3 mt-2 text-xs">' +
+          '<p class="text-slate-400">Sua resposta: <span class="text-rose-400 font-bold">' +
+          letras[escolha] + ') ' + esc(q.o[escolha]) + '</span></p>' +
+          '<p class="text-slate-400 mt-1">Certa: <span class="text-emerald-400 font-bold">' +
+          letras[q.a] + ') ' + esc(q.o[q.a]) + '</span></p></div></div>';
+
+      document.getElementById('modalConteudo').innerHTML = feedbackHtml;
+      document.getElementById('modalConteudo').style.display = 'block';
+      var btn = document.getElementById('modalFecharBtn');
+      var hasMore = quizSession.current < quizSession.questions.length;
+      btn.textContent = hasMore ? 'Próxima ➜' : 'Ver Resultado';
+      btn.style.display = 'inline-block';
+      btn.onclick = proximaOuFinalizar;
+      document.getElementById('modalGlobal').style.display = 'flex';
+      btn.focus();
+    }
+
+    function proximaOuFinalizar() {
+      fecharModal();
+      document.getElementById('modalFecharBtn').onclick = fecharModal;
+      document.getElementById('modalFecharBtn').textContent = 'OK';
+      if (!quizSession) return;
+      if (quizSession.current < quizSession.questions.length) {
+        mostrarPergunta();
+      } else {
+        finalizarSessao();
+      }
+    }
+
+    function finalizarSessao() {
+      document.getElementById('quizAtivo').style.display = 'none';
+      document.getElementById('quizIdle').style.display = 'block';
+      var state = getEstado();
+      var total = quizSession.correct + quizSession.wrong;
+      var pct = total > 0 ? Math.round((quizSession.correct / total) * 100) : 0;
+      var emoji = pct === 100 ? '🏆' : pct >= 70 ? '🎉' : pct >= 50 ? '👍' : '📚';
+      var msg = pct === 100 ? 'Perfeito! Nota máxima!' : pct >= 70 ? 'Muito bem!' : pct >= 50 ? 'Continue estudando!' : 'Não desanime, pratique mais!';
+
+      var html = '<div class="text-center space-y-3">' +
+        '<p class="text-4xl">' + emoji + '</p>' +
+        '<p class="font-bold text-indigo-300 text-base">' + msg + '</p>' +
+        '<div class="grid grid-cols-3 gap-2 mt-2">' +
+        '<div class="bg-slate-900 rounded-xl p-2"><p class="text-xs text-slate-400">Acertos</p>' +
+        '<p class="font-bold text-emerald-400">' + quizSession.correct + '/' + total + '</p></div>' +
+        '<div class="bg-slate-900 rounded-xl p-2"><p class="text-xs text-slate-400">Aproveit.</p>' +
+        '<p class="font-bold text-amber-400">' + pct + '%</p></div>' +
+        '<div class="bg-slate-900 rounded-xl p-2"><p class="text-xs text-slate-400">Pontos</p>' +
+        '<p class="font-bold text-indigo-400">+' + (quizSession.correct * PONTOS_CERTO) + '</p></div>' +
+        '</div>' +
+        '<div class="bg-slate-900 rounded-xl p-3 text-xs text-slate-400 mt-1">' +
+        '<p>Pontos do mês: <span class="font-bold text-amber-400">' + state.points + '</span></p>' +
+        '<p>Hoje: <span class="font-bold text-indigo-300">' + state.questionsToday + '/' + MAX_POR_DIA + '</span></p>' +
+        '</div>' +
+        (state.questionsToday < MAX_POR_DIA
+          ? '<p class="text-xs text-indigo-300">Você ainda pode responder mais hoje!</p>'
+          : '<p class="text-xs text-slate-400">Volte amanhã para mais perguntas!</p>') +
+        '</div>';
+
+      abrirModalConteudo('🎓 Resultado da Sessão', html);
+      quizSession = null;
+      atualizarQuizUI();
+    }
+
+    function cancelarQuiz() {
+      document.getElementById('quizAtivo').style.display = 'none';
+      document.getElementById('quizIdle').style.display = 'block';
+      quizSession = null;
+    }
+
+    function mostrarRanking() {
+      var state = getEstado();
+      var mes = mesAtual();
+      var partes = mes.split('-');
+      var nomesMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                      'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      var nomeMes = nomesMes[parseInt(partes[1],10) - 1];
+      var total = state.totalCorrect + state.totalWrong;
+      var pct = total > 0 ? Math.round((state.totalCorrect / total) * 100) : 0;
+      var nivel = state.points >= 500 ? '🏆 Mestre da Fé'
+                : state.points >= 300 ? '🥈 Experiente'
+                : state.points >= 100 ? '🥉 Aprendiz'
+                : '📚 Iniciante';
+      var html =
+        '<div class="space-y-3">' +
+        '<div class="text-center">' +
+        '<p class="text-4xl">' + (state.points >= 500 ? '🏆' : state.points >= 300 ? '🥈' : state.points >= 100 ? '🥉' : '📚') + '</p>' +
+        '<p class="font-bold text-indigo-300 text-base mt-1">' + esc(nomeUsuario || 'Coroinha') + '</p>' +
+        '<p class="text-amber-400 font-semibold text-sm">' + nivel + '</p>' +
+        '</div>' +
+        '<div class="grid grid-cols-2 gap-2">' +
+        '<div class="bg-slate-900 rounded-xl p-3 text-center"><p class="text-xs text-slate-400">Pontos</p><p class="font-bold text-amber-400 text-lg">' + state.points + '</p></div>' +
+        '<div class="bg-slate-900 rounded-xl p-3 text-center"><p class="text-xs text-slate-400">Dias jogados</p><p class="font-bold text-indigo-300 text-lg">' + state.daysPlayed.length + '</p></div>' +
+        '<div class="bg-slate-900 rounded-xl p-3 text-center"><p class="text-xs text-slate-400">Acertos</p><p class="font-bold text-emerald-400 text-lg">' + state.totalCorrect + '</p></div>' +
+        '<div class="bg-slate-900 rounded-xl p-3 text-center"><p class="text-xs text-slate-400">Erros</p><p class="font-bold text-rose-400 text-lg">' + state.totalWrong + '</p></div>' +
+        '</div>' +
+        '<div class="bg-slate-900 rounded-xl p-3">' +
+        '<p class="text-xs text-slate-400 mb-2 text-center">Aproveitamento geral</p>' +
+        '<div class="w-full bg-slate-700 rounded-full h-2.5"><div class="bg-indigo-500 h-2.5 rounded-full transition-all" style="width:' + pct + '%"></div></div>' +
+        '<p class="text-xs text-indigo-300 mt-1 text-center font-bold">' + pct + '%</p>' +
+        '</div>' +
+        '<p class="text-xs text-slate-500 text-center">Ranking de ' + nomeMes + ' ' + partes[0] + ' — resetado a cada mês.</p>' +
+        '</div>';
+      abrirModalConteudo('🏆 Ranking — ' + nomeMes + ' ' + partes[0], html);
+    }
+  </script>
+</body>
+</html>
