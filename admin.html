@@ -54,7 +54,11 @@
             <button onclick="gerarEscala()" id="btnGerar" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-4 rounded-2xl mb-6 transition-all shadow-lg">Sortear Disponíveis</button>
             
             <div id="resultadoEscala" class="hidden space-y-4">
-                <div id="listaFinal" class="bg-gray-700 p-5 rounded-2xl border border-blue-500/30 text-sm space-y-2"></div>
+                <div class="p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl text-xs text-blue-300">
+                    💡 <strong>Dica:</strong> Você pode apagar ou digitar outros nomes diretamente nos campos abaixo antes de enviar.
+                </div>
+                <div id="listaFinal" class="bg-gray-700 p-5 rounded-2xl border border-blue-500/30 text-sm space-y-4">
+                    </div>
                 <textarea id="obs" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl h-20 text-white outline-none" placeholder="Observações para o WhatsApp..."></textarea>
                 <button onclick="enviarWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 font-bold py-4 rounded-2xl flex items-center justify-center transition-all shadow-lg">
                     <span class="mr-2">💬</span> Enviar Escala no WhatsApp
@@ -65,75 +69,64 @@
 
     <script>
         const API = "https://script.google.com/macros/s/AKfycbzyDSWSVz3TiNVB6YxflRpAlRVD6ox6D47T5pJGUWagjGEF9qX_idUOvQe1ZiZjl5ZdOg/exec";
-        let escalaAtual = null;
-
-        // FUNÇÃO NOVA: ADICIONAR MISSA NA PLANILHA
+        
         async function addMissa() {
             const dataRaw = document.getElementById('novaDataMissa').value;
             const hora = document.getElementById('novaHoraMissa').value;
             if(!dataRaw || !hora) return alert("Preencha data e hora da missa!");
-
             const d = dataRaw.split("-");
             const dataFmt = `${d[2]}/${d[1]}/${d[0]}`;
-            
             document.getElementById('btnAddMissa').innerText = "Salvando...";
-            await fetch(API, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify({action: "cadastrarMissa", dataMissa: dataFmt, horaMissa: hora}) 
-            });
-            
+            await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "cadastrarMissa", dataMissa: dataFmt, horaMissa: hora}) });
             alert("Sucesso! A data " + dataFmt + " já aparece para os coroinhas.");
             document.getElementById('btnAddMissa').innerText = "Liberar no App";
             document.getElementById('novaDataMissa').value = "";
             document.getElementById('novaHoraMissa').value = "";
         }
 
-        // FUNÇÃO ORIGINAL: CADASTRAR COROINHA
         async function cadastrarMembro() {
             const nome = document.getElementById('cadNome').value.trim();
             const cat = document.getElementById('cadCat').value;
             if(!nome) return alert("Digite o nome do coroinha!");
-            
             document.getElementById('btnCad').innerText = "Processando...";
-            await fetch(API, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify({ action: "cadastrarMembro", nome, cat }) 
-            });
-            
+            await fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "cadastrarMembro", nome, cat }) });
             alert("Coroinha cadastrado com sucesso!");
             document.getElementById('cadNome').value = "";
             document.getElementById('btnCad').innerText = "Salvar Coroinha";
         }
 
-        // FUNÇÃO ORIGINAL: GERAR ESCALA
         async function gerarEscala() {
             const dataRaw = document.getElementById('dataEscala').value;
             const hora = document.getElementById('horaEscala').value;
-            if(!dataRaw || !hora) return alert("Selecione data e hora para gerar a escala!");
+            if(!dataRaw || !hora) return alert("Selecione data e hora!");
 
             const d = dataRaw.split("-");
             const dataFmt = `${d[2]}/${d[1]}/${d[0]}`;
-
             document.getElementById('btnGerar').innerText = "Sorteando...";
+
             const resp = await fetch(API, { 
                 method: 'POST', 
                 body: JSON.stringify({ action: "gerarEscala", dataMissa: dataFmt, horaMissa: hora }) 
             });
-            escalaAtual = await resp.json();
+            const escalaAtual = await resp.json();
 
             let html = "";
             const categorias = { "Acólitos": escalaAtual.acolitos, "Veteranos": escalaAtual.veteranos, "Médios": escalaAtual.medios, "Novatos": escalaAtual.novatos };
+            
             for (const [label, pessoas] of Object.entries(categorias)) {
-                html += `<div class="border-b border-gray-600 pb-1"><strong>${label}:</strong> ${pessoas.length > 0 ? pessoas.map(p => p.nome).join(', ') : '---'}</div>`;
+                // Transforma cada categoria em um campo de texto editável
+                const nomesLinha = pessoas.length > 0 ? pessoas.map(p => p.nome).join(', ') : '';
+                html += `
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">${label}</label>
+                    <input type="text" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white escala-input" data-cat="${label}" value="${nomesLinha}" placeholder="Nenhum voluntário...">
+                </div>`;
             }
             document.getElementById('listaFinal').innerHTML = html;
             document.getElementById('resultadoEscala').classList.remove('hidden');
             document.getElementById('btnGerar').innerText = "Sortear Disponíveis";
         }
 
-        // FUNÇÃO ORIGINAL: WHATSAPP
         function enviarWhatsApp() {
             const dataRaw = document.getElementById('dataEscala').value.split("-");
             const dataFmt = `${dataRaw[2]}/${dataRaw[1]}/${dataRaw[0]}`;
@@ -141,10 +134,15 @@
             const obs = document.getElementById('obs').value;
 
             let texto = `*ESCALA DE COROINHAS*\n📅 ${dataFmt} | ⏰ ${hora}h\n\n`;
-            const categorias = { "Acólitos": escalaAtual.acolitos, "Veteranos": escalaAtual.veteranos, "Médios": escalaAtual.medios, "Novatos": escalaAtual.novatos };
-            for (const [label, pessoas] of Object.entries(categorias)) {
-                texto += `*${label}:* ${pessoas.map(p => p.nome).join(', ') || '---'}\n`;
-            }
+            
+            // Pega os valores atuais dos inputs (caso o coordenador tenha editado/trocado)
+            const inputs = document.querySelectorAll('.escala-input');
+            inputs.forEach(input => {
+                const categoria = input.getAttribute('data-cat');
+                const nomes = input.value.trim() || '---';
+                texto += `*${categoria}:* ${nomes}\n`;
+            });
+
             if(obs) texto += `\n⚠️ *Obs:* ${obs}`;
             window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
         }
