@@ -3,61 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrativo - Coordenador</title>
+    <title>Painel AD - Coordenador</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 p-4">
     <div class="max-w-3xl mx-auto space-y-6">
-        
-        <div class="bg-gray-800 rounded-3xl shadow-2xl p-6 border border-gray-700">
-            <h2 class="text-xl font-bold text-green-400 mb-4 flex items-center">
-                <span class="mr-2">👤</span> Cadastrar Novo Coroinha
-            </h2>
+        <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl">
+            <h2 class="text-xl font-bold text-green-400 mb-4">👤 Cadastrar Coroinha</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <input type="text" id="cadNome" placeholder="Nome Completo" class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none focus:border-green-500">
-                <select id="cadCat" class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none focus:border-green-500">
+                <select id="cadCat" class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none">
                     <option value="Acólito">Acólito</option>
                     <option value="Veterano">Veterano</option>
                     <option value="Médio">Médio</option>
                     <option value="Novato">Novato</option>
                 </select>
-                <button onclick="cadastrarMembro()" id="btnCad" class="bg-green-600 hover:bg-green-700 font-bold py-3 rounded-xl transition-all">Salvar na Lista</button>
+                <button onclick="cadastrarMembro()" id="btnCad" class="bg-green-600 hover:bg-green-700 font-bold py-3 rounded-xl transition-all">Salvar Coroinha</button>
             </div>
         </div>
 
-        <div class="bg-gray-800 rounded-3xl shadow-2xl p-6 border border-gray-700">
-            <h2 class="text-xl font-bold text-blue-400 mb-6 flex items-center">
-                <span class="mr-2">📅</span> Gerar Escala do Dia
-            </h2>
-
+        <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl">
+            <h2 class="text-xl font-bold text-blue-400 mb-6">📅 Gerar Escala</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                    <label class="block text-sm text-gray-400 mb-1">Data da Missa:</label>
-                    <select id="dataMissa" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl outline-none focus:border-blue-500 text-white"></select>
+                    <label class="block text-sm text-gray-400 mb-1">Data:</label>
+                    <select id="dataMissa" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white"></select>
                 </div>
                 <div>
                     <label class="block text-sm text-gray-400 mb-1">Horário:</label>
-                    <select id="horaMissa" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl outline-none focus:border-blue-500 text-white"></select>
+                    <select id="horaMissa" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white"></select>
                 </div>
             </div>
-
-            <button onclick="gerarEscala()" id="btnGerar" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-4 rounded-2xl shadow-lg mb-6 transition-all">
-                Analisar Disponibilidades e Gerar
-            </button>
-
+            <button onclick="gerarEscala()" id="btnGerar" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-4 rounded-2xl mb-6 transition-all">Analisar e Gerar</button>
             <div id="resultadoEscala" class="hidden space-y-4">
-                <div class="bg-gray-700/50 p-4 rounded-2xl border border-blue-500/30">
-                    <div id="listaFinal" class="text-sm space-y-2"></div>
-                </div>
-                <textarea id="obs" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl h-20 outline-none" placeholder="Observações (ex: Reunião após a missa)"></textarea>
-                <button onclick="enviarWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 font-bold py-4 rounded-2xl flex items-center justify-center">
-                    <span class="mr-2">💬</span> Enviar Escala no WhatsApp
-                </button>
+                <div id="listaFinal" class="bg-gray-700 p-4 rounded-2xl border border-blue-500/30 text-sm space-y-2"></div>
+                <textarea id="obs" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl h-20 text-white" placeholder="Observações..."></textarea>
+                <button onclick="enviarWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 font-bold py-4 rounded-2xl">💬 Enviar no WhatsApp</button>
             </div>
-        </div>
-
-        <div class="text-center">
-            <a href="https://docs.google.com/spreadsheets/d/12HFM5p3DpX3eR23W8ER8EIogqKbBzPWnmD_AnF31nIE/edit" target="_blank" class="text-gray-500 text-xs underline">Acessar Planilha Master</a>
         </div>
     </div>
 
@@ -66,63 +48,45 @@
         let escalaAtual = null;
 
         window.onload = async () => {
-            const resp = await fetch(API_URL);
-            const config = await resp.json();
-            document.getElementById('dataMissa').innerHTML = config.config.datas.map(d => `<option value="${d}">${d}</option>`).join('');
-            document.getElementById('horaMissa').innerHTML = config.config.horas.map(h => `<option value="${h}">${h}</option>`).join('');
+            try {
+                const resp = await fetch(API_URL);
+                const data = await resp.json();
+                document.getElementById('dataMissa').innerHTML = data.config.datas.map(d => `<option value="${d}">${d}</option>`).join('');
+                document.getElementById('horaMissa').innerHTML = data.config.horas.map(h => `<option value="${h}">${h}</option>`).join('');
+            } catch(e) { console.error("Erro ao carregar datas. Verifique a aba Config."); }
         };
 
         async function cadastrarMembro() {
             const nome = document.getElementById('cadNome').value.trim();
             const cat = document.getElementById('cadCat').value;
             if(!nome) return alert("Digite o nome!");
-
             document.getElementById('btnCad').innerText = "Salvando...";
-            await fetch(API_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ action: "cadastrarMembro", nome, cat })
-            });
-            
-            alert("Coroinha cadastrado com sucesso!");
+            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "cadastrarMembro", nome, cat }) });
+            alert("Cadastrado! Verifique a aba Membros.");
             document.getElementById('cadNome').value = "";
-            document.getElementById('btnCad').innerText = "Salvar na Lista";
+            document.getElementById('btnCad').innerText = "Salvar Coroinha";
         }
 
         async function gerarEscala() {
-            const data = document.getElementById('dataMissa').value;
-            const hora = document.getElementById('horaMissa').value;
-            document.getElementById('btnGerar').innerText = "Sorteando nomes...";
-            
-            const resp = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: "gerarEscala", dataMissa: data, horaMissa: hora })
-            });
+            const dataMissa = document.getElementById('dataMissa').value;
+            const horaMissa = document.getElementById('horaMissa').value;
+            document.getElementById('btnGerar').innerText = "Gerando...";
+            const resp = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: "gerarEscala", dataMissa, horaMissa }) });
             escalaAtual = await resp.json();
-
             let html = "";
             const cats = { "Acólitos": escalaAtual.acolitos, "Veteranos": escalaAtual.veteranos, "Médios": escalaAtual.medios, "Novatos": escalaAtual.novatos };
-
             for (const [label, pessoas] of Object.entries(cats)) {
-                html += `<div class="border-b border-gray-600 pb-2"><strong>${label}:</strong> ${pessoas.length > 0 ? pessoas.map(p => p.nome).join(', ') : '---'}</div>`;
+                html += `<div><strong>${label}:</strong> ${pessoas.length > 0 ? pessoas.map(p => p.nome).join(', ') : '---'}</div>`;
             }
-
             document.getElementById('listaFinal').innerHTML = html;
             document.getElementById('resultadoEscala').classList.remove('hidden');
-            document.getElementById('btnGerar').innerText = "Analisar Disponibilidades e Gerar";
+            document.getElementById('btnGerar').innerText = "Analisar e Gerar";
         }
 
         function enviarWhatsApp() {
-            const data = document.getElementById('dataMissa').value;
-            const hora = document.getElementById('horaMissa').value;
-            let texto = `*ESCALA DE COROINHAS*\n📅 ${data} | ⏰ ${hora}h\n\n`;
-            
+            let texto = `*ESCALA DE COROINHAS*\n📅 ${document.getElementById('dataMissa').value}\n\n`;
             const cats = { "Acólitos": escalaAtual.acolitos, "Veteranos": escalaAtual.veteranos, "Médios": escalaAtual.medios, "Novatos": escalaAtual.novatos };
-            for (const [label, pessoas] of Object.entries(cats)) {
-                texto += `*${label}:* ${pessoas.map(p => p.nome).join(', ') || '---'}\n`;
-            }
-            if(document.getElementById('obs').value) texto += `\n⚠️ *Obs:* ${document.getElementById('obs').value}`;
-
+            for (const [label, pessoas] of Object.entries(cats)) { texto += `*${label}:* ${pessoas.map(p => p.nome).join(', ') || '---'}\n`; }
             window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
         }
     </script>
