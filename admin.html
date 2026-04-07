@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel AD - Coordenador</title>
+    <title>Painel Administrativo - Coordenador</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 p-4">
     <div class="max-w-3xl mx-auto space-y-6">
         
         <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl">
-            <h2 class="text-xl font-bold text-green-400 mb-4">👤 Cadastrar Coroinha</h2>
+            <h2 class="text-xl font-bold text-green-400 mb-4 flex items-center">
+                <span class="mr-2">👤</span> Cadastrar Coroinha
+            </h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <input type="text" id="cadNome" placeholder="Nome Completo" class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none focus:border-green-500 text-white">
                 <select id="cadCat" class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none text-white">
@@ -19,93 +21,126 @@
                     <option value="Médio">Médio</option>
                     <option value="Novato">Novato</option>
                 </select>
-                <button onclick="cadastrarMembro()" id="btnCad" class="bg-green-600 hover:bg-green-700 font-bold py-3 rounded-xl transition-all">Salvar Coroinha</button>
+                <button onclick="cadastrarMembro()" id="btnCad" class="bg-green-600 hover:bg-green-700 font-bold py-3 rounded-xl transition-all shadow-lg">Salvar Coroinha</button>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl border-l-4 border-l-yellow-500">
+            <h2 class="text-xl font-bold text-yellow-400 mb-4 flex items-center">
+                <span class="mr-2">📅</span> Abrir Novas Datas de Missa
+            </h2>
+            <p class="text-sm text-gray-400 mb-4">Selecione o dia e a hora para liberar no App dos coroinhas.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="date" id="novaDataMissa" class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none focus:border-yellow-500 text-white">
+                <input type="time" id="novaHoraMissa" class="bg-gray-700 border border-gray-600 p-3 rounded-xl outline-none focus:border-yellow-500 text-white">
+                <button onclick="addMissa()" id="btnAddMissa" class="bg-yellow-600 hover:bg-yellow-700 font-bold py-3 rounded-xl transition-all shadow-lg text-white">Liberar no App</button>
             </div>
         </div>
 
         <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-2xl">
-            <h2 class="text-xl font-bold text-blue-400 mb-6">📅 Gerar Escala</h2>
+            <h2 class="text-xl font-bold text-blue-400 mb-6 flex items-center">
+                <span class="mr-2">🛠️</span> Gerar Escala do Dia
+            </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                    <label class="block text-sm text-gray-400 mb-1">Data da Missa:</label>
-                    <input type="date" id="dataMissa" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white outline-none focus:border-blue-500">
+                    <label class="block text-sm text-gray-400 mb-1">Data:</label>
+                    <input type="date" id="dataEscala" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white outline-none focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-sm text-gray-400 mb-1">Horário:</label>
-                    <input type="time" id="horaMissa" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white outline-none focus:border-blue-500">
+                    <input type="time" id="horaEscala" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white outline-none focus:border-blue-500">
                 </div>
             </div>
-            <button onclick="gerarEscala()" id="btnGerar" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-4 rounded-2xl mb-6 transition-all">Analisar e Gerar Escala</button>
+            <button onclick="gerarEscala()" id="btnGerar" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-4 rounded-2xl mb-6 transition-all shadow-lg">Sortear Disponíveis</button>
             
             <div id="resultadoEscala" class="hidden space-y-4">
-                <div id="listaFinal" class="bg-gray-700 p-4 rounded-2xl border border-blue-500/30 text-sm space-y-2"></div>
-                <textarea id="obs" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl h-20 text-white" placeholder="Ex: Chegar 15 min antes..."></textarea>
-                <button onclick="enviarWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 font-bold py-4 rounded-2xl flex items-center justify-center">
-                    <span class="mr-2">💬</span> Enviar no WhatsApp
+                <div id="listaFinal" class="bg-gray-700 p-5 rounded-2xl border border-blue-500/30 text-sm space-y-2"></div>
+                <textarea id="obs" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl h-20 text-white outline-none" placeholder="Observações para o WhatsApp..."></textarea>
+                <button onclick="enviarWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 font-bold py-4 rounded-2xl flex items-center justify-center transition-all shadow-lg">
+                    <span class="mr-2">💬</span> Enviar Escala no WhatsApp
                 </button>
             </div>
-        </div>
-
-        <div class="text-center">
-            <a href="https://docs.google.com/spreadsheets/d/12HFM5p3DpX3eR23W8ER8EIogqKbBzPWnmD_AnF31nIE/edit" target="_blank" class="text-gray-500 text-xs underline">Abrir Planilha no Google</a>
         </div>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzyDSWSVz3TiNVB6YxflRpAlRVD6ox6D47T5pJGUWagjGEF9qX_idUOvQe1ZiZjl5ZdOg/exec";
+        const API = "https://script.google.com/macros/s/AKfycbzyDSWSVz3TiNVB6YxflRpAlRVD6ox6D47T5pJGUWagjGEF9qX_idUOvQe1ZiZjl5ZdOg/exec";
         let escalaAtual = null;
 
+        // FUNÇÃO NOVA: ADICIONAR MISSA NA PLANILHA
+        async function addMissa() {
+            const dataRaw = document.getElementById('novaDataMissa').value;
+            const hora = document.getElementById('novaHoraMissa').value;
+            if(!dataRaw || !hora) return alert("Preencha data e hora da missa!");
+
+            const d = dataRaw.split("-");
+            const dataFmt = `${d[2]}/${d[1]}/${d[0]}`;
+            
+            document.getElementById('btnAddMissa').innerText = "Salvando...";
+            await fetch(API, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({action: "cadastrarMissa", dataMissa: dataFmt, horaMissa: hora}) 
+            });
+            
+            alert("Sucesso! A data " + dataFmt + " já aparece para os coroinhas.");
+            document.getElementById('btnAddMissa').innerText = "Liberar no App";
+            document.getElementById('novaDataMissa').value = "";
+            document.getElementById('novaHoraMissa').value = "";
+        }
+
+        // FUNÇÃO ORIGINAL: CADASTRAR COROINHA
         async function cadastrarMembro() {
             const nome = document.getElementById('cadNome').value.trim();
             const cat = document.getElementById('cadCat').value;
-            if(!nome) return alert("Digite o nome!");
+            if(!nome) return alert("Digite o nome do coroinha!");
             
             document.getElementById('btnCad').innerText = "Processando...";
-            // Enviando como formulário para evitar bloqueios de CORS em navegadores rígidos
-            await fetch(API_URL, { 
+            await fetch(API, { 
                 method: 'POST', 
                 mode: 'no-cors', 
-                body: JSON.stringify({ action: "cadastrarMembro", nome: nome, cat: cat }) 
+                body: JSON.stringify({ action: "cadastrarMembro", nome, cat }) 
             });
             
-            alert("Comando enviado! Verifique sua planilha em alguns segundos.");
+            alert("Coroinha cadastrado com sucesso!");
             document.getElementById('cadNome').value = "";
             document.getElementById('btnCad').innerText = "Salvar Coroinha";
         }
 
+        // FUNÇÃO ORIGINAL: GERAR ESCALA
         async function gerarEscala() {
-            const rawDate = document.getElementById('dataMissa').value;
-            const hora = document.getElementById('horaMissa').value;
-            if(!rawDate || !hora) return alert("Selecione data e hora!");
+            const dataRaw = document.getElementById('dataEscala').value;
+            const hora = document.getElementById('horaEscala').value;
+            if(!dataRaw || !hora) return alert("Selecione data e hora para gerar a escala!");
 
-            const d = rawDate.split("-");
-            const dataFormatada = `${d[2]}/${d[1]}/${d[0]}`;
+            const d = dataRaw.split("-");
+            const dataFmt = `${d[2]}/${d[1]}/${d[0]}`;
 
-            document.getElementById('btnGerar').innerText = "Buscando Disponíveis...";
-            const resp = await fetch(API_URL, { 
+            document.getElementById('btnGerar').innerText = "Sorteando...";
+            const resp = await fetch(API, { 
                 method: 'POST', 
-                body: JSON.stringify({ action: "gerarEscala", dataMissa: dataFormatada, horaMissa: hora }) 
+                body: JSON.stringify({ action: "gerarEscala", dataMissa: dataFmt, horaMissa: hora }) 
             });
             escalaAtual = await resp.json();
 
             let html = "";
             const categorias = { "Acólitos": escalaAtual.acolitos, "Veteranos": escalaAtual.veteranos, "Médios": escalaAtual.medios, "Novatos": escalaAtual.novatos };
             for (const [label, pessoas] of Object.entries(categorias)) {
-                html += `<div><strong>${label}:</strong> ${pessoas.length > 0 ? pessoas.map(p => p.nome).join(', ') : '---'}</div>`;
+                html += `<div class="border-b border-gray-600 pb-1"><strong>${label}:</strong> ${pessoas.length > 0 ? pessoas.map(p => p.nome).join(', ') : '---'}</div>`;
             }
             document.getElementById('listaFinal').innerHTML = html;
             document.getElementById('resultadoEscala').classList.remove('hidden');
-            document.getElementById('btnGerar').innerText = "Analisar e Gerar Escala";
+            document.getElementById('btnGerar').innerText = "Sortear Disponíveis";
         }
 
+        // FUNÇÃO ORIGINAL: WHATSAPP
         function enviarWhatsApp() {
-            const rawDate = document.getElementById('dataMissa').value;
-            const d = rawDate.split("-");
-            const dataFormatada = `${d[2]}/${d[1]}/${d[0]}`;
-            const hora = document.getElementById('horaMissa').value;
+            const dataRaw = document.getElementById('dataEscala').value.split("-");
+            const dataFmt = `${dataRaw[2]}/${dataRaw[1]}/${dataRaw[0]}`;
+            const hora = document.getElementById('horaEscala').value;
             const obs = document.getElementById('obs').value;
 
-            let texto = `*ESCALA DE COROINHAS*\n📅 Data: ${dataFormatada}\n⏰ Hora: ${hora}h\n\n`;
+            let texto = `*ESCALA DE COROINHAS*\n📅 ${dataFmt} | ⏰ ${hora}h\n\n`;
             const categorias = { "Acólitos": escalaAtual.acolitos, "Veteranos": escalaAtual.veteranos, "Médios": escalaAtual.medios, "Novatos": escalaAtual.novatos };
             for (const [label, pessoas] of Object.entries(categorias)) {
                 texto += `*${label}:* ${pessoas.map(p => p.nome).join(', ') || '---'}\n`;
