@@ -3,55 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <title>Coroinhas</title>
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="https://cdn.tailwindcss.com">
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto p-5">
-        <h1 class="text-xl font-bold">Lista de Coroinhas</h1>
-        <div class="mt-4">
-            <button id="enviarWhatsApp" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Enviar WhatsApp</button>
-            <button id="limparDisponibilidade" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Limpar Lista de Disponibilidade</button>
-        </div>
-        <div id="resultado" class="mt-5">
-            <div id="listaFinal"></div>
-            <div id="obs"></div>
-            <div id="escalaAtual"></div>
-        </div>
+<body>
+    <div class="container mx-auto">
+        <h1 class="text-3xl font-bold">Painel Admin</h1>
+        
+        <form id="coroinhaForm">
+            <input type="text" placeholder="Nome do Coroinha" required class="border rounded p-2">
+            <button type="submit" class="bg-blue-500 text-white rounded p-2">Cadastrar Coroinha</button>
+        </form>
+        <button id="cadastrarMissa" class="bg-green-500 text-white rounded p-2">Cadastrar Missa</button>
+        <button id="gerarEscala" class="bg-yellow-500 text-white rounded p-2">Gerar Escala</button>
+        <button id="whatsappButton" class="bg-purple-500 text-white rounded p-2">Enviar WhatsApp</button>
+        <button id="limparDisponibilidadeButton" class="bg-red-500 text-white rounded p-2">Limpar Disponibilidade</button>
     </div>
+
     <script>
-        document.getElementById('enviarWhatsApp').addEventListener('click', function() {
-            // lógica para enviar WhatsApp com a lista final sem categorias
-            const coroinhaNomes = getCoroinhaNomes(); // Função que deve ser implementada para obter os nomes
-            const mensagem = coroinhaNomes.join('\n');
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`);
+        const apiURL = "<YOUR_API_URL>"; // Existing API URL
+
+        document.getElementById('whatsappButton').addEventListener('click', () => {
+            const coroinhas = getSelectedCoroinhas();
+            const message = createWhatsAppMessage(coroinhas);
+            sendWhatsAppMessage(message);
         });
 
-        document.getElementById('limparDisponibilidade').addEventListener('click', function() {
-            if (confirm('Tem certeza que deseja limpar a lista de disponibilidade?')) {
-                fetch('/api/limparDisponibilidade', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ action: 'limparDisponibilidade' })
-                }).then(response => {
-                    if (response.ok) {
-                        document.getElementById('listaFinal').innerHTML = '';
-                        document.getElementById('obs').innerHTML = '';
-                        document.getElementById('escalaAtual').innerHTML = '';
-                        // Reset inputs, se houver
-                    } else {
-                        alert('Erro ao limpar a lista. Tente novamente.');
-                    }
-                });
-            }
+        document.getElementById('limparDisponibilidadeButton').addEventListener('click', async () => {
+            await fetch(apiURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: "limparDisponibilidade" })
+            });
+            clearUIState();
         });
 
-        function getCoroinhaNomes() {
-            // Implementar a lógica para retornar os nomes dos coroinhas
-            // Exemplo: return ['Coroinha 1', 'Coroinha 2'];
-            return []; // Placeholder
+        function getSelectedCoroinhas() {
+            // Code to fetch selected coroinhas' names only
+        }
+
+        function createWhatsAppMessage(coroinhas) {
+            const dateTime = new Date().toLocaleString();
+            const observations = 'Algumas observações...'; // If any
+            const flattenedNames = [...new Set(coroinhas)]; // Deduplicate names
+            return `Coroinhas: ${flattenedNames.join(', ')}\nData/Hora: ${dateTime}\n${observations}`;
+        }
+
+        function sendWhatsAppMessage(message) {
+            // Function to send message via WhatsApp
+        }
+
+        function clearUIState() {
+            // Function to clear the UI state
         }
     </script>
 </body>
