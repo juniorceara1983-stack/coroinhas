@@ -1,13 +1,14 @@
 {
-  "name": "Escala de Coroinhas",
-  "short_name": "Coroinhas",
-  "description": "Sistema de escala para coroinhas da paróquia",
-  "start_url": "./indexcoroinha.html",
+  "id": "coroinhas-admin",
+  "name": "Escala Coroinhas — Coordenador",
+  "short_name": "Coordenador",
+  "description": "Painel do coordenador para geração e envio da escala de coroinhas",
+  "start_url": "./admin.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0f172a",
-  "theme_color": "#6366f1",
+  "background_color": "#121838",
+  "theme_color": "#7c6cc4",
   "lang": "pt-BR",
   "categories": ["productivity", "utilities"],
   "icons": [
@@ -22,13 +23,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Painel Admin",
-      "url": "./admin.html",
-      "description": "Painel administrativo"
     }
   ]
 }

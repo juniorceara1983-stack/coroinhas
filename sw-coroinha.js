@@ -1,12 +1,11 @@
-const CACHE_NAME = 'coroinhas-v1';
+const CACHE_NAME = 'coroinhas-portal-v1';
 const ASSETS = [
-  './',
   './indexcoroinha.html',
-  './admin.html',
   './questions.js',
-  './manifest.json',
+  './manifest-coroinha.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './IMG_20260401_014539.jpg',
   'https://cdn.tailwindcss.com'
 ];
 
