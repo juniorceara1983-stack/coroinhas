@@ -106,7 +106,7 @@ function verificarNome(nome) {
       return {
         id:    r[0].toString(),
         data:  r[1],
-        hora:  r[2],
+        hora:  r[2] ? r[2].toString() : "",
         label: r[3] ? r[3].toString() : ""
       };
     });
@@ -129,7 +129,7 @@ function listarMissas() {
       return {
         id:    r[0].toString(),
         data:  r[1],
-        hora:  r[2],
+        hora:  r[2] ? r[2].toString() : "",
         label: r[3] ? r[3].toString() : ""
       };
     });
@@ -153,7 +153,7 @@ function cadastrarMembro(body) {
 function addMissa(body) {
   var ss = getSpreadsheet();
   var sheet = getOrCreateSheet(ss, "Missas", ["ID", "Data", "Hora", "Label"]);
-  var id = new Date().getTime().toString();
+  var id = Utilities.getUuid();
   sheet.appendRow([id, body.data, body.hora, body.label || ""]);
   return jsonResponse({ ok: true, id: id });
 }
