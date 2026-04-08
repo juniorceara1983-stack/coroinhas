@@ -343,72 +343,58 @@
       atualizarQuizUI();
     }
 
-   function carregarMissas(config) {
-  if (!config || !config.missas || !config.missas.length) {
-    document.getElementById('listaMissas').innerHTML =
-      '<p class="text-slate-500 italic text-sm text-center py-3">Nenhuma missa disponível no momento.</p>';
-    return;
-  }
-  
-  var html = '';
-  config.missas.forEach(function(m) {
-    // TRATAMENTO DE SEGURANÇA:
-    // Forçamos a conversão para String e limpamos resquícios de objetos de data
-    var dataLimpa = String(m.data).split('T')[0]; 
-    var horaLimpa = String(m.hora).split(' ')[0];
+    function carregarMissas(config) {
+      if (!config || !config.missas || !config.missas.length) {
+        document.getElementById('listaMissas').innerHTML =
+          '<p class="text-slate-500 italic text-sm text-center py-3">Nenhuma missa disponível no momento.</p>';
+        return;
+      }
+      // Recupera confirmações já enviadas por este coroinha (salvas em localStorage)
+      var jaEnviadas = [];
+      try {
+        var saved = localStorage.getItem('dispo_' + nomeUsuario);
+        if (saved) jaEnviadas = JSON.parse(saved);
+      } catch (e) {}
 
-    // Se o coordenador não deu um nome (label), usamos a data/hora limpas
-    var labelMissa = (m.label && m.label.trim()) ? m.label : (dataLimpa + ' — ' + horaLimpa);
-
-    html += '<label class="flex items-center p-3 bg-slate-900 rounded-xl cursor-pointer hover:bg-slate-800 transition-all gap-3">' +
-      '<input type="checkbox" class="missa-item w-5 h-5 text-indigo-600 rounded flex-shrink-0" ' +
-      'data-d="' + esc(dataLimpa) + '" ' + 
-      'data-h="' + esc(horaLimpa) + '">' +
-      '<span class="text-sm font-semibold text-slate-300">' + esc(labelMissa) + '</span>' +
-      '</label>';
-  });
-  
-  document.getElementById('listaMissas').innerHTML = html;
-  document.getElementById('btnEnviar').classList.remove('hidden');
-}
+      var html = '';
+      config.missas.forEach(function(m) {
+        var base  = (m.label && m.label.trim()) ? m.label : m.data;
+        var label = m.hora ? (base + ' \u2014 ' + m.hora + 'h') : base;
+        var jaConfirmou = jaEnviadas.some(function(s) { return s.data === m.data && s.hora === m.hora; });
+        var badge = jaConfirmou
+          ? '<span class="ml-auto text-xs text-emerald-400 font-semibold whitespace-nowrap">\u2705 Confirmado</span>'
+          : '';
+        html += '<label class="flex items-center p-3 bg-slate-900 rounded-xl cursor-pointer hover:bg-slate-800 transition-all gap-3">' +
+          '<input type="checkbox" class="missa-item w-5 h-5 text-indigo-600 rounded flex-shrink-0"' +
+          ' data-d="' + esc(m.data) + '" data-h="' + esc(m.hora) + '"' +
+          (jaConfirmou ? ' checked' : '') + '>' +
+          '<span class="text-sm font-semibold text-slate-300 flex-1">' + esc(label) + '</span>' +
+          badge +
+          '</label>';
+      });
+      document.getElementById('listaMissas').innerHTML = html;
+      document.getElementById('btnEnviar').classList.remove('hidden');
+    }
 
     async function enviarDispo() {
-  var checks = document.querySelectorAll('.missa-item:checked');
-  if (checks.length === 0) { 
-    abrirModalMensagem('Selecione pelo menos uma data!', 'aviso'); 
-    return; 
-  }
-
-  // Corrigindo a captura: garantimos que data e hora sejam enviadas como texto limpo
-  var selecoes = Array.from(checks).map(function(i) { 
-    return { 
-      data: String(i.dataset.d), // Força ser texto (ex: "19/04/2026")
-      hora: String(i.dataset.h)  // Força ser texto (ex: "19:00")
-    }; 
-  });
-
-  abrirModalLoader('Enviando disponibilidade…');
-
-  try {
-    await fetch(URL_API, {
-      method: 'POST', 
-      mode: 'no-cors',
-      body: JSON.stringify({ 
-        action: "salvarDisponibilidade", 
-        nome: nomeUsuario, 
-        selecoes: selecoes 
-      })
-    });
-
-    // Feedback visual de sucesso
-    document.getElementById('dispoArea').innerHTML =
-      '<div class="text-center py-6 text-emerald-400 font-bold text-sm">✅ Presença enviada com sucesso!</div>';
-    
-    abrirModalMensagem('✅ Disponibilidade confirmada com sucesso!', 'sucesso');
-  } catch (e) {
-    abrirModalMensagem('Erro ao enviar: ' + (e.message || e), 'erro');
-  }
-}
+      var checks = document.querySelectorAll('.missa-item:checked');
+      if (checks.length === 0) { abrirModalMensagem('Selecione pelo menos uma data!', 'aviso'); return; }
+      var selecoes = Array.from(checks).map(function(i) { return { data: i.dataset.d, hora: i.dataset.h }; });
+      abrirModalLoader('Enviando disponibilidade…');
+      try {
+        await fetch(URL_API, {
+          method: 'POST', mode: 'no-cors',
+          body: JSON.stringify({ action: "salvarDisponibilidade", nome: nomeUsuario, selecoes: selecoes })
+        });
+        // Persiste seleções para exibir na próxima visita
+        try { localStorage.setItem('dispo_' + nomeUsuario, JSON.stringify(selecoes)); } catch (e) {}
+        document.getElementById('dispoArea').innerHTML =
+          '<div class="text-center py-6 text-emerald-400 font-bold text-sm">✅ Presença enviada com sucesso!</div>';
+        abrirModalMensagem('✅ Disponibilidade confirmada com sucesso!', 'sucesso');
+      } catch (e) {
+        abrirModalMensagem('Erro ao enviar: ' + (e.message || e), 'erro');
+      }
+    }
 
     // ── Liturgia & Santos ─────────────────────────────────────────
     async function mostrarLiturgia() {
