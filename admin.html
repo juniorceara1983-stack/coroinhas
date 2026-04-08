@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#6366f1" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Coroinhas" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <title>Painel Administrativo Pro ⛪</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -426,10 +433,10 @@
         return;
       }
 
-      let msg = '⛪ *Escala de Coroinhas*\n';
-      msg += '🗓️ ' + missaLabel + '\n\n';
+      let msg = '\u26EA *Escala de Coroinhas*\n';
+      msg += '\uD83D\uDCC5 ' + missaLabel + '\n\n';
       msg += nomes.map(n => '• ' + n).join('\n');
-      if (data.obs && data.obs.trim()) msg += '\n\n📝 ' + data.obs.trim();
+      if (data.obs && data.obs.trim()) msg += '\n\n\uD83D\uDCDD ' + data.obs.trim();
       const quote = FRASES[Math.floor(Math.random() * FRASES.length)];
       msg += '\n\n_' + quote + '_';
 
@@ -497,6 +504,11 @@
       calcularLabelData();
       carregarListaMissas();
     })();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
   </script>
 </body>
 </html>
