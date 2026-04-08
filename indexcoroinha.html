@@ -367,10 +367,17 @@
       var selecoes = Array.from(checks).map(function(i) { return { data: i.dataset.d, hora: i.dataset.h }; });
       abrirModalLoader('Enviando disponibilidade…');
       try {
-        await fetch(URL_API, {
-          method: 'POST', mode: 'no-cors',
+        var resp = await fetch(URL_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: "salvarDisponibilidade", nome: nomeUsuario, selecoes: selecoes })
         });
+        var text = await resp.text();
+        var data;
+        try { data = JSON.parse(text); } catch (_) { data = {}; }
+        if (!resp.ok || data.ok === false) {
+          throw new Error(data.erro || ('HTTP ' + resp.status));
+        }
         document.getElementById('dispoArea').innerHTML =
           '<div class="text-center py-6 text-emerald-400 font-bold text-sm">✅ Presença enviada com sucesso!</div>';
         abrirModalMensagem('✅ Disponibilidade confirmada com sucesso!', 'sucesso');
