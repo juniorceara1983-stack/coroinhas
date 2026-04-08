@@ -106,37 +106,44 @@
       <section class="card rounded-2xl p-5 shadow-lg">
         <h2 class="text-lg font-bold text-indigo-300 mb-4">📖 Liturgia &amp; Santos</h2>
         <div class="grid grid-cols-2 gap-3">
-          <button onclick="mostrarLiturgia()"
-            class="bg-blue-700 hover:bg-blue-600 active:bg-blue-800 focus:ring-2 focus:ring-blue-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+          <a href="https://cancaonova.com/liturgia-diaria/" target="_blank" rel="noopener noreferrer"
+            class="bg-blue-700 hover:bg-blue-600 active:bg-blue-800 focus:ring-2 focus:ring-blue-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none flex items-center justify-center text-center">
             📖 Liturgia do Dia
-          </button>
-          <button onclick="mostrarSanto()"
-            class="bg-amber-600 hover:bg-amber-500 active:bg-amber-700 focus:ring-2 focus:ring-amber-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+          </a>
+          <a href="https://cancaonova.com/santo-do-dia/" target="_blank" rel="noopener noreferrer"
+            class="bg-amber-600 hover:bg-amber-500 active:bg-amber-700 focus:ring-2 focus:ring-amber-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none flex items-center justify-center text-center">
             ✨ Santo do Dia
-          </button>
+          </a>
         </div>
       </section>
 
       <!-- ===== ORAÇÕES ===== -->
       <section class="card rounded-2xl p-5 shadow-lg">
         <h2 class="text-lg font-bold text-indigo-300 mb-4">🙏 Orações</h2>
-        <div class="grid grid-cols-2 gap-3">
-          <button onclick="mostrarOracao('pai_nosso')"
-            class="bg-violet-700 hover:bg-violet-600 active:bg-violet-800 focus:ring-2 focus:ring-violet-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
-            🕊️ Pai Nosso
+        <div class="relative">
+          <button onclick="toggleOracoesMenu()"
+            class="w-full bg-violet-700 hover:bg-violet-600 active:bg-violet-800 focus:ring-2 focus:ring-violet-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none flex items-center justify-center gap-2">
+            🙏 Escolher Oração <span id="oracoesMenuArrow">▼</span>
           </button>
-          <button onclick="mostrarOracao('ave_maria')"
-            class="bg-violet-700 hover:bg-violet-600 active:bg-violet-800 focus:ring-2 focus:ring-violet-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
-            🌹 Ave Maria
-          </button>
-          <button onclick="mostrarOracao('salve_rainha')"
-            class="bg-violet-700 hover:bg-violet-600 active:bg-violet-800 focus:ring-2 focus:ring-violet-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
-            👑 Salve Rainha
-          </button>
-          <button onclick="mostrarOracao('credo')"
-            class="bg-violet-700 hover:bg-violet-600 active:bg-violet-800 focus:ring-2 focus:ring-violet-400 text-white font-bold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
-            ✝️ Credo
-          </button>
+          <div id="oracoesMenu" style="display:none"
+               class="mt-2 flex flex-col gap-2">
+            <button onclick="mostrarOracao('pai_nosso'); fecharOracoesMenu()"
+              class="w-full bg-violet-800 hover:bg-violet-700 active:bg-violet-900 focus:ring-2 focus:ring-violet-400 text-white font-semibold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+              🕊️ Pai Nosso
+            </button>
+            <button onclick="mostrarOracao('ave_maria'); fecharOracoesMenu()"
+              class="w-full bg-violet-800 hover:bg-violet-700 active:bg-violet-900 focus:ring-2 focus:ring-violet-400 text-white font-semibold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+              🌹 Ave Maria
+            </button>
+            <button onclick="mostrarOracao('salve_rainha'); fecharOracoesMenu()"
+              class="w-full bg-violet-800 hover:bg-violet-700 active:bg-violet-900 focus:ring-2 focus:ring-violet-400 text-white font-semibold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+              👑 Salve Rainha
+            </button>
+            <button onclick="mostrarOracao('credo'); fecharOracoesMenu()"
+              class="w-full bg-violet-800 hover:bg-violet-700 active:bg-violet-900 focus:ring-2 focus:ring-violet-400 text-white font-semibold py-3 rounded-xl transition-all shadow text-sm focus:outline-none">
+              ✝️ Credo
+            </button>
+          </div>
         </div>
       </section>
 
@@ -563,6 +570,21 @@
       var o = ORACOES[chave];
       if (!o) return;
       abrirModalConteudo(o.titulo, o.html);
+    }
+
+    function toggleOracoesMenu() {
+      var menu = document.getElementById('oracoesMenu');
+      var arrow = document.getElementById('oracoesMenuArrow');
+      var isOpen = menu.style.display !== 'none';
+      menu.style.display = isOpen ? 'none' : 'flex';
+      arrow.textContent = isOpen ? '▼' : '▲';
+    }
+
+    function fecharOracoesMenu() {
+      var menu = document.getElementById('oracoesMenu');
+      var arrow = document.getElementById('oracoesMenuArrow');
+      menu.style.display = 'none';
+      arrow.textContent = '▼';
     }
 
     // ── Conteúdos do Coroinha ─────────────────────────────────────
