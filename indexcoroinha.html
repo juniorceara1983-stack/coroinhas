@@ -349,12 +349,27 @@
           '<p class="text-slate-500 italic text-sm text-center py-3">Nenhuma missa disponível no momento.</p>';
         return;
       }
+      // Recupera confirmações já enviadas por este coroinha (salvas em localStorage)
+      var jaEnviadas = [];
+      try {
+        var saved = localStorage.getItem('dispo_' + nomeUsuario);
+        if (saved) jaEnviadas = JSON.parse(saved);
+      } catch (e) {}
+
       var html = '';
       config.missas.forEach(function(m) {
-        var label = (m.label && m.label.trim()) ? m.label : (m.data + ' — ' + m.hora + 'h');
+        var base  = (m.label && m.label.trim()) ? m.label : m.data;
+        var label = m.hora ? (base + ' \u2014 ' + m.hora + 'h') : base;
+        var jaConfirmou = jaEnviadas.some(function(s) { return s.data === m.data && s.hora === m.hora; });
+        var badge = jaConfirmou
+          ? '<span class="ml-auto text-xs text-emerald-400 font-semibold whitespace-nowrap">\u2705 Confirmado</span>'
+          : '';
         html += '<label class="flex items-center p-3 bg-slate-900 rounded-xl cursor-pointer hover:bg-slate-800 transition-all gap-3">' +
-          '<input type="checkbox" class="missa-item w-5 h-5 text-indigo-600 rounded flex-shrink-0" data-d="' + esc(m.data) + '" data-h="' + esc(m.hora) + '">' +
-          '<span class="text-sm font-semibold text-slate-300">' + esc(label) + '</span>' +
+          '<input type="checkbox" class="missa-item w-5 h-5 text-indigo-600 rounded flex-shrink-0"' +
+          ' data-d="' + esc(m.data) + '" data-h="' + esc(m.hora) + '"' +
+          (jaConfirmou ? ' checked' : '') + '>' +
+          '<span class="text-sm font-semibold text-slate-300 flex-1">' + esc(label) + '</span>' +
+          badge +
           '</label>';
       });
       document.getElementById('listaMissas').innerHTML = html;
@@ -371,6 +386,8 @@
           method: 'POST', mode: 'no-cors',
           body: JSON.stringify({ action: "salvarDisponibilidade", nome: nomeUsuario, selecoes: selecoes })
         });
+        // Persiste seleções para exibir na próxima visita
+        try { localStorage.setItem('dispo_' + nomeUsuario, JSON.stringify(selecoes)); } catch (e) {}
         document.getElementById('dispoArea').innerHTML =
           '<div class="text-center py-6 text-emerald-400 font-bold text-sm">✅ Presença enviada com sucesso!</div>';
         abrirModalMensagem('✅ Disponibilidade confirmada com sucesso!', 'sucesso');
