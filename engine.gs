@@ -61,6 +61,18 @@ function cellToString_(value) {
     var m = s.match(/(\d{2}):(\d{2}):\d{2}/);
     if (m) return m[1] + ":" + m[2];
   }
+  // Date.toString() com data normal gravado como texto: "Sun Apr 12 2026 00:00:00 GMT+0000..."
+  // Extrai dia/mês/ano diretamente sem re-parsear por timezone.
+  var dtMatch = s.match(/^[A-Za-z]{3}\s+([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})\s+/);
+  if (dtMatch) {
+    var monthMap = {Jan:"01",Feb:"02",Mar:"03",Apr:"04",May:"05",Jun:"06",
+                    Jul:"07",Aug:"08",Sep:"09",Oct:"10",Nov:"11",Dec:"12"};
+    var mon = monthMap[dtMatch[1]];
+    if (mon) {
+      var day = dtMatch[2].length === 1 ? "0" + dtMatch[2] : dtMatch[2];
+      return day + "/" + mon + "/" + dtMatch[3];
+    }
+  }
   return s;
 }
 
