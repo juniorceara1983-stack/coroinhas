@@ -507,7 +507,7 @@
   </script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw-admin.js');
+      navigator.serviceWorker.register('./sw-admin.js', { scope: './admin.html' });
     }
   </script>
 </body>
