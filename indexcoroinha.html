@@ -1010,7 +1010,7 @@
   </script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw-coroinha.js');
+      navigator.serviceWorker.register('./sw-coroinha.js', { scope: './indexcoroinha.html' });
     }
   </script>
 </body>
