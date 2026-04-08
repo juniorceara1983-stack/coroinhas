@@ -40,7 +40,7 @@ function cellToString_(value) {
   if (value === null || value === undefined || value === "") return "";
   if (value instanceof Date) {
     var tz = Session.getScriptTimeZone();
-    if (value.getFullYear() <= 1900) {
+    if (value.getFullYear() < 1900) {
       // Valor de hora pura (serial de planilha sem data)
       return Utilities.formatDate(value, tz, "HH:mm");
     }
@@ -110,7 +110,14 @@ function verificarNome_(nome) {
 function cadastrarMembro_(body) {
   if (!body.nome) return jsonOk_({ erro: "Nome obrigatório" });
   var sh = getOrCreateSheet_(SHEET_MEMBROS, ["Nome", "Categoria"]);
-  sh.appendRow([body.nome.trim(), body.cat || "Novato"]);
+  var nomeTrimmed = body.nome.trim();
+  var nomeLower = nomeTrimmed.toLowerCase();
+  var rows = sh.getDataRange().getValues();
+  var jaExiste = rows.slice(1).some(function(row) {
+    return String(row[0]).trim().toLowerCase() === nomeLower;
+  });
+  if (jaExiste) return jsonOk_({ ok: false, aviso: "Coroinha já cadastrado." });
+  sh.appendRow([nomeTrimmed, body.cat || "Novato"]);
   return jsonOk_({ ok: true });
 }
 
@@ -173,7 +180,9 @@ function salvarDisponibilidade_(body) {
 function limparDisponibilidade_() {
   var sh = getOrCreateSheet_(SHEET_DISPONIBIL, ["Data", "Hora", "Nome", "Timestamp"]);
   var lastRow = sh.getLastRow();
-  if (lastRow > 1) sh.deleteRows(2, lastRow - 1);
+  if (lastRow > 1) {
+    sh.getRange(2, 1, lastRow - 1, sh.getMaxColumns()).clearContent();
+  }
   return jsonOk_({ ok: true });
 }
 
