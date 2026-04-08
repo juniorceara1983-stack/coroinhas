@@ -343,23 +343,34 @@
       atualizarQuizUI();
     }
 
-    function carregarMissas(config) {
-      if (!config || !config.missas || !config.missas.length) {
-        document.getElementById('listaMissas').innerHTML =
-          '<p class="text-slate-500 italic text-sm text-center py-3">Nenhuma missa disponível no momento.</p>';
-        return;
-      }
-      var html = '';
-      config.missas.forEach(function(m) {
-        var label = (m.label && m.label.trim()) ? m.label : (m.data + ' — ' + m.hora + 'h');
-        html += '<label class="flex items-center p-3 bg-slate-900 rounded-xl cursor-pointer hover:bg-slate-800 transition-all gap-3">' +
-          '<input type="checkbox" class="missa-item w-5 h-5 text-indigo-600 rounded flex-shrink-0" data-d="' + esc(m.data) + '" data-h="' + esc(m.hora) + '">' +
-          '<span class="text-sm font-semibold text-slate-300">' + esc(label) + '</span>' +
-          '</label>';
-      });
-      document.getElementById('listaMissas').innerHTML = html;
-      document.getElementById('btnEnviar').classList.remove('hidden');
-    }
+   function carregarMissas(config) {
+  if (!config || !config.missas || !config.missas.length) {
+    document.getElementById('listaMissas').innerHTML =
+      '<p class="text-slate-500 italic text-sm text-center py-3">Nenhuma missa disponível no momento.</p>';
+    return;
+  }
+  
+  var html = '';
+  config.missas.forEach(function(m) {
+    // TRATAMENTO DE SEGURANÇA:
+    // Forçamos a conversão para String e limpamos resquícios de objetos de data
+    var dataLimpa = String(m.data).split('T')[0]; 
+    var horaLimpa = String(m.hora).split(' ')[0];
+
+    // Se o coordenador não deu um nome (label), usamos a data/hora limpas
+    var labelMissa = (m.label && m.label.trim()) ? m.label : (dataLimpa + ' — ' + horaLimpa);
+
+    html += '<label class="flex items-center p-3 bg-slate-900 rounded-xl cursor-pointer hover:bg-slate-800 transition-all gap-3">' +
+      '<input type="checkbox" class="missa-item w-5 h-5 text-indigo-600 rounded flex-shrink-0" ' +
+      'data-d="' + esc(dataLimpa) + '" ' + 
+      'data-h="' + esc(horaLimpa) + '">' +
+      '<span class="text-sm font-semibold text-slate-300">' + esc(labelMissa) + '</span>' +
+      '</label>';
+  });
+  
+  document.getElementById('listaMissas').innerHTML = html;
+  document.getElementById('btnEnviar').classList.remove('hidden');
+}
 
     async function enviarDispo() {
   var checks = document.querySelectorAll('.missa-item:checked');
