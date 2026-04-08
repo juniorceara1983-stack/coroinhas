@@ -426,11 +426,10 @@
         return;
       }
 
-      // \uFE0F forces emoji presentation on all platforms
-      let msg = '\u26EA\uFE0F *Escala de Coroinhas*\n';
-      msg += '\uD83D\uDCC5 ' + missaLabel + '\n\n';
-      msg += nomes.map(n => '\u2022 ' + n).join('\n');
-      if (data.obs && data.obs.trim()) msg += '\n\n\uD83D\uDCDD ' + data.obs.trim();
+      let msg = '⛪ *Escala de Coroinhas*\n';
+      msg += '🗓️ ' + missaLabel + '\n\n';
+      msg += nomes.map(n => '• ' + n).join('\n');
+      if (data.obs && data.obs.trim()) msg += '\n\n📝 ' + data.obs.trim();
       const quote = FRASES[Math.floor(Math.random() * FRASES.length)];
       msg += '\n\n_' + quote + '_';
 
