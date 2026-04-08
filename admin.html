@@ -255,6 +255,31 @@
       return `${dd}/${mm}/${yyyy}`;
     }
 
+    // Google Sheets serializa valores de hora/data como ISO strings ao retornar via GAS.
+    // Ex: "19:06" vira "1899-12-30T22:06:28.000Z" e "19/04/2026" vira "2026-04-19T03:00:00.000Z".
+    // Essas funções normalizam para os formatos legíveis HH:MM e DD/MM/YYYY.
+    function formatarHora(h) {
+      if (!h) return '';
+      if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(String(h).trim())) return String(h).trim().substring(0, 5);
+      try {
+        const d = new Date(h);
+        if (!isNaN(d.getTime())) {
+          return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        }
+      } catch (e) {}
+      return h;
+    }
+
+    function formatarData(d) {
+      if (!d) return '';
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(String(d).trim())) return d;
+      try {
+        const dt = new Date(d);
+        if (!isNaN(dt.getTime())) return formatBR(dt);
+      } catch (e) {}
+      return d;
+    }
+
     function obterDataPelaPosicao(ordem, diaSemana, ano, mesIndex) {
       let d = new Date(ano, mesIndex, 1);
       let count = 0;
@@ -430,7 +455,7 @@
 
         listaEl.innerHTML = missas.map((m, i) => `
           <div class="flex items-center justify-between bg-slate-900 rounded-xl px-4 py-3">
-            <span class="text-sm text-slate-300">${m.label || m.data} ${m.hora ? '· ' + m.hora : ''}</span>
+            <span class="text-sm text-slate-300">${m.label || formatarData(m.data)} ${m.hora ? '· ' + formatarHora(m.hora) : ''}</span>
             <button data-missa-index="${i}"
               class="btn-excluir text-xs bg-rose-700 hover:bg-rose-600 active:bg-rose-800 text-white px-3 py-1.5 rounded-lg font-bold transition-all focus:outline-none focus:ring-2 focus:ring-rose-400">
               🗑️ Excluir
@@ -447,7 +472,7 @@
         });
 
         selectEl.innerHTML = '<option value="">— Selecione a missa —</option>' +
-          missas.map(m => `<option value="${m.id}">${m.label || m.data}${m.hora ? ' ' + m.hora : ''}</option>`).join('');
+          missas.map(m => `<option value="${m.id}">${m.label || formatarData(m.data)}${m.hora ? ' ' + formatarHora(m.hora) : ''}</option>`).join('');
       } catch {
         listaEl.innerHTML = '<span class="text-rose-400 italic text-center py-3 block">Erro ao carregar missas.</span>';
       }
