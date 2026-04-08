@@ -362,22 +362,42 @@
     }
 
     async function enviarDispo() {
-      var checks = document.querySelectorAll('.missa-item:checked');
-      if (checks.length === 0) { abrirModalMensagem('Selecione pelo menos uma data!', 'aviso'); return; }
-      var selecoes = Array.from(checks).map(function(i) { return { data: i.dataset.d, hora: i.dataset.h }; });
-      abrirModalLoader('Enviando disponibilidade…');
-      try {
-        await fetch(URL_API, {
-          method: 'POST', mode: 'no-cors',
-          body: JSON.stringify({ action: "salvarDisponibilidade", nome: nomeUsuario, selecoes: selecoes })
-        });
-        document.getElementById('dispoArea').innerHTML =
-          '<div class="text-center py-6 text-emerald-400 font-bold text-sm">✅ Presença enviada com sucesso!</div>';
-        abrirModalMensagem('✅ Disponibilidade confirmada com sucesso!', 'sucesso');
-      } catch (e) {
-        abrirModalMensagem('Erro ao enviar: ' + (e.message || e), 'erro');
-      }
-    }
+  var checks = document.querySelectorAll('.missa-item:checked');
+  if (checks.length === 0) { 
+    abrirModalMensagem('Selecione pelo menos uma data!', 'aviso'); 
+    return; 
+  }
+
+  // Corrigindo a captura: garantimos que data e hora sejam enviadas como texto limpo
+  var selecoes = Array.from(checks).map(function(i) { 
+    return { 
+      data: String(i.dataset.d), // Força ser texto (ex: "19/04/2026")
+      hora: String(i.dataset.h)  // Força ser texto (ex: "19:00")
+    }; 
+  });
+
+  abrirModalLoader('Enviando disponibilidade…');
+
+  try {
+    await fetch(URL_API, {
+      method: 'POST', 
+      mode: 'no-cors',
+      body: JSON.stringify({ 
+        action: "salvarDisponibilidade", 
+        nome: nomeUsuario, 
+        selecoes: selecoes 
+      })
+    });
+
+    // Feedback visual de sucesso
+    document.getElementById('dispoArea').innerHTML =
+      '<div class="text-center py-6 text-emerald-400 font-bold text-sm">✅ Presença enviada com sucesso!</div>';
+    
+    abrirModalMensagem('✅ Disponibilidade confirmada com sucesso!', 'sucesso');
+  } catch (e) {
+    abrirModalMensagem('Erro ao enviar: ' + (e.message || e), 'erro');
+  }
+}
 
     // ── Liturgia & Santos ─────────────────────────────────────────
     async function mostrarLiturgia() {
