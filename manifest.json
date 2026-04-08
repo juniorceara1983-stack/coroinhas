@@ -1,0 +1,34 @@
+{
+  "name": "Escala de Coroinhas",
+  "short_name": "Coroinhas",
+  "description": "Sistema de escala para coroinhas da paróquia",
+  "start_url": "./indexcoroinha.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "lang": "pt-BR",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Painel Admin",
+      "url": "./admin.html",
+      "description": "Painel administrativo"
+    }
+  ]
+}
