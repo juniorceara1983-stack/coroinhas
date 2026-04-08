@@ -4,7 +4,7 @@
 //  Planilhas utilizadas:
 //    "Membros"        → Nome | Categoria
 //    "Missas"         → ID | Data | Hora | Label
-//    "Disponibilidade"→ Data | Hora | Nome | Timestamp
+//    "Disponibilidade"→ Nome | Data | Hora | Timestamp
 // ============================================================
 
 var SHEET_MEMBROS    = "Membros";
@@ -26,27 +26,42 @@ function getOrCreateSheet_(name, headers) {
 /**
  * Converte um valor de célula do Google Sheets para string legível.
  *
- * O problema: quando uma célula contém apenas horário (sem data), o Sheets
- * armazena um número serial fracionário (0 a 1) e o GAS o envolve num Date
- * cujo ano é 1899. Ao serializar diretamente para JSON esse Date vira
- * "1899-12-30T22:06:28.000Z" — que é o bug visível na planilha.
- *
- * A correção:
+ * Casos tratados:
  *   - Date com ano ≤ 1900  → formata apenas a hora: "HH:mm"
  *   - Date com ano normal  → formata a data: "dd/MM/yyyy"
+ *   - String ISO (ex: "2026-04-12T03:00:00.000Z") → formata como data "dd/MM/yyyy"
+ *   - String Date.toString() contendo "1899" (hora pura) → extrai "HH:mm"
  *   - Qualquer outro valor → converte para String normalmente
  */
 function cellToString_(value) {
   if (value === null || value === undefined || value === "") return "";
   if (value instanceof Date) {
     var tz = Session.getScriptTimeZone();
-    if (value.getFullYear() < 1900) {
-      // Valor de hora pura (serial de planilha sem data)
+    if (value.getFullYear() <= 1900) {
       return Utilities.formatDate(value, tz, "HH:mm");
     }
     return Utilities.formatDate(value, tz, "dd/MM/yyyy");
   }
-  return String(value);
+  var s = String(value).trim();
+  // ISO date string gravada como texto: "2026-04-12T03:00:00.000Z"
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(s)) {
+    try {
+      var d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        var tz2 = Session.getScriptTimeZone();
+        if (d.getFullYear() > 1900) {
+          return Utilities.formatDate(d, tz2, "dd/MM/yyyy");
+        }
+        return Utilities.formatDate(d, tz2, "HH:mm");
+      }
+    } catch (e) {}
+  }
+  // Date.toString() com ano 1899 gravado como texto: "Sat Dec 30 1899 19:00:00 GMT-0306..."
+  if (s.indexOf("1899") !== -1) {
+    var m = s.match(/(\d{2}):(\d{2}):\d{2}/);
+    if (m) return m[1] + ":" + m[2];
+  }
+  return s;
 }
 
 function jsonOk_(obj) {
@@ -167,18 +182,18 @@ function removerMissa_(body) {
 
 function salvarDisponibilidade_(body) {
   if (!body.nome || !body.selecoes) return jsonOk_({ erro: "Dados incompletos" });
-  var sh = getOrCreateSheet_(SHEET_DISPONIBIL, ["Data", "Hora", "Nome", "Timestamp"]);
+  var sh = getOrCreateSheet_(SHEET_DISPONIBIL, ["Nome", "Data", "Hora", "Timestamp"]);
   var tz = Session.getScriptTimeZone();
   var ts = Utilities.formatDate(new Date(), tz, "dd/MM/yyyy HH:mm:ss");
   var nome = String(body.nome).trim();
   body.selecoes.forEach(function(sel) {
-    sh.appendRow([sel.data, sel.hora, nome, ts]);
+    sh.appendRow([nome, sel.data, sel.hora, ts]);
   });
   return jsonOk_({ ok: true });
 }
 
 function limparDisponibilidade_() {
-  var sh = getOrCreateSheet_(SHEET_DISPONIBIL, ["Data", "Hora", "Nome", "Timestamp"]);
+  var sh = getOrCreateSheet_(SHEET_DISPONIBIL, ["Nome", "Data", "Hora", "Timestamp"]);
   var lastRow = sh.getLastRow();
   if (lastRow > 1) {
     sh.getRange(2, 1, lastRow - 1, sh.getMaxColumns()).clearContent();
@@ -207,13 +222,13 @@ function gerarEscala_(body) {
   if (!missa) return jsonOk_({ erro: "Missa não encontrada" });
 
   // Coleta disponíveis para a missa (data + hora)
-  var shDispo = getOrCreateSheet_(SHEET_DISPONIBIL, ["Data", "Hora", "Nome", "Timestamp"]);
+  var shDispo = getOrCreateSheet_(SHEET_DISPONIBIL, ["Nome", "Data", "Hora", "Timestamp"]);
   var dispoRows = shDispo.getDataRange().getValues();
   var disponiveis = [];
   for (var j = 1; j < dispoRows.length; j++) {
-    var rowData = cellToString_(dispoRows[j][0]);
-    var rowHora = cellToString_(dispoRows[j][1]);
-    var rowNome = String(dispoRows[j][2]).trim();
+    var rowNome = String(dispoRows[j][0]).trim();
+    var rowData = cellToString_(dispoRows[j][1]);
+    var rowHora = cellToString_(dispoRows[j][2]);
     if (rowData === missa.data && rowHora === missa.hora && rowNome) {
       if (disponiveis.indexOf(rowNome) === -1) disponiveis.push(rowNome);
     }
