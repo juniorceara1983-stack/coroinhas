@@ -344,9 +344,11 @@
       }
       var html = '';
       config.missas.forEach(function(m) {
-        var label = (m.label && m.label.trim()) ? m.label : (m.data + ' — ' + m.hora + 'h');
+        var horaFormatada = formatarHora(m.hora);
+        var dataFormatada = formatarData(m.data);
+        var label = (m.label && m.label.trim()) ? m.label : (dataFormatada + ' — ' + horaFormatada + 'h');
         html += '<label class="flex items-center p-3 bg-slate-900 rounded-xl cursor-pointer hover:bg-slate-800 transition-all gap-3">' +
-          '<input type="checkbox" class="missa-item w-5 h-5 text-indigo-600 rounded flex-shrink-0" data-d="' + esc(m.data) + '" data-h="' + esc(m.hora) + '">' +
+          '<input type="checkbox" class="missa-item w-5 h-5 text-indigo-600 rounded flex-shrink-0" data-d="' + esc(dataFormatada) + '" data-h="' + esc(horaFormatada) + '">' +
           '<span class="text-sm font-semibold text-slate-300">' + esc(label) + '</span>' +
           '</label>';
       });
@@ -692,6 +694,34 @@
       return d.getFullYear() + '-' +
         String(d.getMonth()+1).padStart(2,'0') + '-' +
         String(d.getDate()).padStart(2,'0');
+    }
+
+    // Google Sheets serializa valores de hora/data como ISO strings via GAS.
+    // Ex: "19:06" → "1899-12-30T22:06:28.000Z" e "19/04/2026" → "2026-04-19T03:00:00.000Z".
+    function formatarHora(h) {
+      if (!h) return '';
+      if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(String(h).trim())) return String(h).trim().substring(0, 5);
+      try {
+        var d = new Date(h);
+        if (!isNaN(d.getTime())) {
+          return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        }
+      } catch (e) {}
+      return h;
+    }
+
+    function formatarData(d) {
+      if (!d) return '';
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(String(d).trim())) return d;
+      try {
+        var dt = new Date(d);
+        if (!isNaN(dt.getTime())) {
+          return String(dt.getDate()).padStart(2,'0') + '/' +
+                 String(dt.getMonth()+1).padStart(2,'0') + '/' +
+                 dt.getFullYear();
+        }
+      } catch (e) {}
+      return d;
     }
 
     function mesAtual() {
