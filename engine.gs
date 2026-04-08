@@ -11,6 +11,9 @@
 const SPREADSHEET_ID = "12HFM5p3DpX3eR23W8ER8EIogqKbBzPWnmD_AnF31nIE";
 const SS = SpreadsheetApp.openById(SPREADSHEET_ID);
 
+// Quantos coroinhas de cada categoria são escalados por missa
+const COROINHAS_POR_CATEGORIA = 2;
+
 // ─── GET ────────────────────────────────────────────────────────────────────
 
 /**
@@ -89,7 +92,7 @@ function doPost(e) {
     const sheet = SS.getSheetByName("Missas");
     const valores = sheet.getDataRange().getValues();
     for (let i = 1; i < valores.length; i++) {
-      if (valores[i][0] == data.id) {
+      if (valores[i][0] === data.id) {
         sheet.deleteRow(i + 1);
         break;
       }
@@ -140,7 +143,7 @@ function doPost(e) {
 
     // Nomes disponíveis para essa data+hora
     const disponiveisNomes = dispo
-      .filter(function(r) { return r[0] == missaSelecionada.data && r[1] == missaSelecionada.hora; })
+      .filter(function(r) { return String(r[0]) === String(missaSelecionada.data) && String(r[1]) === String(missaSelecionada.hora); })
       .map(function(r) { return r[2]; });
 
     if (disponiveisNomes.length === 0) {
@@ -160,10 +163,10 @@ function doPost(e) {
     };
 
     const escala = [
-      ...escolher("Acólito", 2),
-      ...escolher("Veterano", 2),
-      ...escolher("Médio", 2),
-      ...escolher("Novato", 2)
+      ...escolher("Acólito", COROINHAS_POR_CATEGORIA),
+      ...escolher("Veterano", COROINHAS_POR_CATEGORIA),
+      ...escolher("Médio", COROINHAS_POR_CATEGORIA),
+      ...escolher("Novato", COROINHAS_POR_CATEGORIA)
     ];
 
     const obs = escala.length === 0
