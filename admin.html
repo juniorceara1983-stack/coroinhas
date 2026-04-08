@@ -396,7 +396,12 @@
         return;
       }
       const nomes = normalizarNomesEscala(data.escala);
-      listaFinal.innerHTML = nomes.map(n => `<div>• ${n}</div>`).join('') || '<span class="text-slate-500 italic">Nenhum disponível.</span>';
+      listaFinal.innerHTML = nomes.map(n =>
+        `<div class="flex items-center gap-2 mb-1">
+          <span class="text-slate-400 flex-shrink-0">&bull;</span>
+          <input type="text" class="nome-escala inp rounded-lg px-2 py-1 text-sm flex-1" value="${n.replace(/"/g, '&quot;')}">
+        </div>`
+      ).join('') || '<span class="text-slate-500 italic">Nenhum disponível.</span>';
       obsEl.textContent = data.obs ? `Obs: ${data.obs}` : '';
       document.getElementById('resultadoEscala').style.display = 'block';
     }
@@ -410,18 +415,24 @@
       const data = escalaAtual;
       const missaLabel = document.getElementById('missaSelecionada').selectedOptions[0]?.text || '';
 
-      // Build names list – no category headers, no empty/--- values
-      const nomes = normalizarNomesEscala(data.escala);
+      // Read names from editable inputs (coordinator may have edited them)
+      const inputs = document.querySelectorAll('.nome-escala');
+      const nomes = inputs.length > 0
+        ? Array.from(inputs).map(i => i.value.trim()).filter(Boolean)
+        : normalizarNomesEscala(data.escala);
 
       if (nomes.length === 0) {
         atualizarModal('Nenhum nome na escala para enviar.', 'aviso');
         return;
       }
 
-      let msg = `⛪ *Escala de Coroinhas*\n`;
-      msg += `📅 ${missaLabel}\n\n`;
-      msg += nomes.map(n => `• ${n}`).join('\n');
-      if (data.obs && data.obs.trim()) msg += `\n\n📝 ${data.obs.trim()}`;
+      // \uFE0F forces emoji presentation on all platforms
+      let msg = '\u26EA\uFE0F *Escala de Coroinhas*\n';
+      msg += '\uD83D\uDCC5 ' + missaLabel + '\n\n';
+      msg += nomes.map(n => '\u2022 ' + n).join('\n');
+      if (data.obs && data.obs.trim()) msg += '\n\n\uD83D\uDCDD ' + data.obs.trim();
+      const quote = FRASES[Math.floor(Math.random() * FRASES.length)];
+      msg += '\n\n_' + quote + '_';
 
       const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
       window.open(url, '_blank');
