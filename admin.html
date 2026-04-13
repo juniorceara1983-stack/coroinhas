@@ -138,15 +138,28 @@
           🎲 Sortear Disponíveis
         </button>
         <div id="resultadoEscala" style="display:none">
-          <div class="bg-slate-900 rounded-xl p-4 mt-1 mb-3">
-            <p class="text-xs text-slate-400 mb-2 font-semibold uppercase tracking-wide">Escala Gerada</p>
+          <div class="bg-slate-900 rounded-xl p-4 mt-1">
+            <p class="text-xs text-slate-400 mb-2 font-semibold uppercase tracking-wide">Escala Sorteada</p>
             <div id="listaFinal" class="text-sm text-slate-200 leading-relaxed"></div>
             <div id="obsEscala" class="mt-2 text-xs text-slate-400 italic"></div>
           </div>
-          <button onclick="executarComModal(enviarWhatsApp)"
-            class="w-full bg-green-600 hover:bg-green-500 active:bg-green-700 focus:ring-2 focus:ring-green-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none">
-            📲 Enviar no WhatsApp
-          </button>
+          <div id="sectionDisponiveis" style="display:none" class="bg-slate-900 rounded-xl p-4 mt-2">
+            <button onclick="toggleDisponiveis()"
+              class="w-full flex items-center justify-between text-xs text-slate-400 hover:text-slate-300 font-semibold uppercase tracking-wide focus:outline-none">
+              <span>👥 Disponíveis / Substitutos</span><span id="disponiveisArrow">▼</span>
+            </button>
+            <div id="listaDisponiveis" class="mt-2 max-h-48 overflow-y-auto" style="display:none"></div>
+          </div>
+          <div class="flex flex-col gap-2 mt-3">
+            <button onclick="executarComModal(marcarComoFeito)"
+              class="w-full bg-teal-600 hover:bg-teal-500 active:bg-teal-700 focus:ring-2 focus:ring-teal-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none">
+              ✅ Marcar Escala como Feita
+            </button>
+            <button onclick="executarComModal(enviarWhatsApp)"
+              class="w-full bg-green-600 hover:bg-green-500 active:bg-green-700 focus:ring-2 focus:ring-green-400 text-white font-bold py-3 rounded-xl transition-all shadow focus:outline-none">
+              📲 Enviar no WhatsApp
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -188,6 +201,42 @@
     ];
 
     let escalaAtual = null;
+    let _escCnt = 0;
+
+    // ── Escala helpers ────────────────────────────────────────────
+    const CAT_META = {
+      'Acólito':  { emoji: '⛪', cls: 'text-indigo-300'  },
+      'Veterano': { emoji: '🏅', cls: 'text-amber-300'   },
+      'Médio':    { emoji: '📖', cls: 'text-emerald-300'  },
+      'Novato':   { emoji: '🌱', cls: 'text-rose-300'    },
+    };
+
+    function escAttr(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    }
+
+    function escHTML(s) {
+      return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function _itemNome(nome, vezes) {
+      const id    = 'esc_' + (++_escCnt);
+      const nAttr = escAttr(nome);
+      const nSafe = escHTML(nome);
+      const badge = (vezes !== null && vezes !== undefined)
+        ? `<span class="text-xs bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded-md flex-shrink-0" title="Vezes servidas">${parseInt(vezes)}&times;</span>`
+        : '';
+      return `<div class="flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-slate-800/50">
+        <input type="checkbox" class="toggle-nome-escala w-4 h-4 accent-indigo-500 flex-shrink-0 cursor-pointer"
+               data-nome="${nAttr}" id="${id}" checked>
+        <label for="${id}" class="flex items-center gap-1.5 flex-1 cursor-pointer min-w-0">
+          <span class="nome-escala-text text-sm text-slate-200 truncate">${nSafe}</span>
+          ${badge}
+        </label>
+      </div>`;
+    }
 
     // ── Modal ─────────────────────────────────────────────────────
     function abrirModal(status) {
@@ -395,22 +444,154 @@
     }
 
     function renderizarEscala(data) {
+      _escCnt = 0;
       const listaFinal = document.getElementById('listaFinal');
       const obsEl      = document.getElementById('obsEscala');
+
       if (!data || !data.escala) {
         listaFinal.innerHTML = '<span class="text-slate-500 italic">Nenhum resultado.</span>';
         document.getElementById('resultadoEscala').style.display = 'block';
         return;
       }
-      const nomes = normalizarNomesEscala(data.escala);
-      listaFinal.innerHTML = nomes.map(n =>
-        `<div class="flex items-center gap-2 mb-1">
-          <span class="text-slate-400 flex-shrink-0">&bull;</span>
-          <input type="text" class="nome-escala inp rounded-lg px-2 py-1 text-sm flex-1" value="${n.replace(/"/g, '&quot;')}">
-        </div>`
-      ).join('') || '<span class="text-slate-500 italic">Nenhum disponível.</span>';
+
+      const isValidItem = v => {
+        const s = typeof v === 'object' && v !== null ? String(v.nome || '') : String(v || '');
+        return s.trim() && s.trim() !== '---' && s.trim() !== '-';
+      };
+
+      let html = '';
+      if (!Array.isArray(data.escala)) {
+        // Category-grouped: { Acólito: [...], Veterano: [...], ... }
+        for (const [cat, nomes] of Object.entries(data.escala)) {
+          const items = Array.isArray(nomes) ? nomes.filter(isValidItem) : [];
+          if (!items.length) continue;
+          const meta = CAT_META[cat] || { emoji: '👤', cls: 'text-slate-400' };
+          html += `<div class="mb-3">
+            <p class="text-xs font-bold uppercase tracking-wide ${meta.cls} mb-1">${meta.emoji} ${escHTML(cat)}</p>
+            ${items.map(item => {
+              const nome = typeof item === 'object' && item !== null ? (item.nome || '') : String(item || '');
+              const vezes = typeof item === 'object' && item !== null ? item.vezesServiu : null;
+              return _itemNome(nome, vezes);
+            }).join('')}
+          </div>`;
+        }
+      } else {
+        // Flat array
+        html = data.escala.filter(isValidItem).map(item => {
+          const nome = typeof item === 'object' && item !== null ? (item.nome || '') : String(item || '');
+          const vezes = typeof item === 'object' && item !== null ? item.vezesServiu : null;
+          return _itemNome(nome, vezes);
+        }).join('');
+      }
+
+      listaFinal.innerHTML = html || '<span class="text-slate-500 italic">Nenhum disponível.</span>';
+      listaFinal.querySelectorAll('.toggle-nome-escala').forEach(cb => {
+        cb.addEventListener('change', function() { toggleNomeEscala(this); });
+      });
+
+      // Substitutes / all available section
+      const sectionDisp = document.getElementById('sectionDisponiveis');
+      const listaDisp   = document.getElementById('listaDisponiveis');
+      if (data.disponiveis && data.disponiveis.length) {
+        let dispHtml = '';
+        data.disponiveis.forEach(item => {
+          const nome = typeof item === 'object' && item !== null ? (item.nome || '') : String(item || '');
+          if (!nome) return;
+          const cat   = typeof item === 'object' && item !== null ? (item.cat || '') : '';
+          const vezes = typeof item === 'object' && item !== null ? item.vezesServiu : null;
+          const meta  = CAT_META[cat] || { emoji: '👤', cls: 'text-slate-400' };
+          const badge = (vezes !== null && vezes !== undefined)
+            ? `<span class="text-xs bg-slate-700 text-slate-400 px-1 py-0.5 rounded flex-shrink-0">${parseInt(vezes)}&times;</span>` : '';
+          dispHtml += `<div class="flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-slate-800/50 disp-item">
+            <span class="${meta.cls} text-xs flex-shrink-0">${meta.emoji}</span>
+            <span class="text-sm text-slate-300 flex-1 truncate">${escHTML(nome)}</span>
+            ${cat ? `<span class="text-xs text-slate-500 flex-shrink-0">${escHTML(cat)}</span>` : ''}
+            ${badge}
+            <button class="btn-add-sub text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-2 py-0.5 rounded-lg flex-shrink-0 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                    data-nome="${escAttr(nome)}" data-cat="${escAttr(cat)}" data-vezes="${vezes !== null && vezes !== undefined ? parseInt(vezes) : ''}">
+              + Sub
+            </button>
+          </div>`;
+        });
+        listaDisp.innerHTML = dispHtml || '<span class="text-xs text-slate-500 italic">Nenhum além dos sorteados.</span>';
+        listaDisp.querySelectorAll('.btn-add-sub').forEach(btn => {
+          btn.addEventListener('click', function() {
+            adicionarSubstituto(this.dataset.nome, this.dataset.cat, this.dataset.vezes !== '' ? parseInt(this.dataset.vezes) : null);
+            this.closest('.disp-item').style.display = 'none';
+          });
+        });
+        sectionDisp.style.display = 'block';
+        listaDisp.style.display = 'none';
+        document.getElementById('disponiveisArrow').textContent = '▼';
+      } else {
+        sectionDisp.style.display = 'none';
+      }
+
       obsEl.textContent = data.obs ? `Obs: ${data.obs}` : '';
       document.getElementById('resultadoEscala').style.display = 'block';
+    }
+
+    function toggleNomeEscala(cb) {
+      const label = cb.nextElementSibling;
+      if (!label) return;
+      const nomeEl = label.querySelector('.nome-escala-text');
+      if (!nomeEl) return;
+      if (cb.checked) {
+        nomeEl.classList.remove('line-through', 'text-slate-500');
+        nomeEl.classList.add('text-slate-200');
+      } else {
+        nomeEl.classList.add('line-through', 'text-slate-500');
+        nomeEl.classList.remove('text-slate-200');
+      }
+    }
+
+    function adicionarSubstituto(nome, cat, vezes) {
+      const listaFinal = document.getElementById('listaFinal');
+      const meta = CAT_META[cat] || { emoji: '👤', cls: 'text-indigo-300' };
+      const id = 'esc_sub_' + Date.now();
+      const badge = (vezes !== null && vezes !== undefined)
+        ? `<span class="text-xs bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded-md flex-shrink-0">${parseInt(vezes)}&times;</span>` : '';
+      const div = document.createElement('div');
+      div.className = 'flex items-center gap-2 py-1 px-2 rounded-lg bg-indigo-900/30 hover:bg-indigo-900/50';
+      div.innerHTML = `
+        <input type="checkbox" class="toggle-nome-escala w-4 h-4 accent-indigo-500 flex-shrink-0 cursor-pointer"
+               data-nome="${escAttr(nome)}" id="${id}" checked>
+        <label for="${id}" class="flex items-center gap-1.5 flex-1 cursor-pointer min-w-0">
+          <span class="nome-escala-text text-sm ${meta.cls} truncate">${escHTML(nome)}</span>
+          ${badge}
+          <span class="text-xs text-indigo-500 flex-shrink-0">&#8629; sub</span>
+        </label>`;
+      div.querySelector('.toggle-nome-escala').addEventListener('change', function() { toggleNomeEscala(this); });
+      listaFinal.appendChild(div);
+    }
+
+    function toggleDisponiveis() {
+      const el    = document.getElementById('listaDisponiveis');
+      const arrow = document.getElementById('disponiveisArrow');
+      const shown = el.style.display !== 'none';
+      el.style.display = shown ? 'none' : 'block';
+      arrow.textContent = shown ? '▼' : '▲';
+    }
+
+    async function marcarComoFeito() {
+      if (!escalaAtual) {
+        atualizarModal('Gere a escala antes de marcar como feita.', 'aviso');
+        return;
+      }
+      const missaId = document.getElementById('missaSelecionada').value;
+      if (!missaId) {
+        atualizarModal('Selecione uma missa.', 'aviso');
+        return;
+      }
+      const nomes = Array.from(document.querySelectorAll('.toggle-nome-escala:checked'))
+        .map(t => t.dataset.nome).filter(Boolean);
+      if (nomes.length === 0) {
+        atualizarModal('Nenhum coroinha marcado como presente na escala.', 'aviso');
+        return;
+      }
+      abrirModal('Registrando serviço…');
+      await postJSON({ action: "registrarServico", missaId, nomes });
+      atualizarModal(`✅ Serviço registrado para ${nomes.length} coroinha${nomes.length > 1 ? 's' : ''}!`, 'sucesso');
     }
 
     async function enviarWhatsApp() {
@@ -422,10 +603,10 @@
       const data = escalaAtual;
       const missaLabel = document.getElementById('missaSelecionada').selectedOptions[0]?.text || '';
 
-      // Read names from editable inputs (coordinator may have edited them)
-      const inputs = document.querySelectorAll('.nome-escala');
-      const nomes = inputs.length > 0
-        ? Array.from(inputs).map(i => i.value.trim()).filter(Boolean)
+      // Read names from checked toggles (coordinator may have toggled off substitutions)
+      const toggles = document.querySelectorAll('.toggle-nome-escala:checked');
+      const nomes = toggles.length > 0
+        ? Array.from(toggles).map(t => t.dataset.nome).filter(Boolean)
         : normalizarNomesEscala(data.escala);
 
       if (nomes.length === 0) {
@@ -452,6 +633,8 @@
       document.getElementById('resultadoEscala').style.display = 'none';
       document.getElementById('listaFinal').innerHTML = '';
       document.getElementById('obsEscala').textContent = '';
+      document.getElementById('sectionDisponiveis').style.display = 'none';
+      document.getElementById('listaDisponiveis').innerHTML = '';
       atualizarModal('✅ Disponibilidades resetadas!', 'sucesso');
     }
 
