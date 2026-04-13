@@ -226,7 +226,7 @@
       const nAttr = escAttr(nome);
       const nSafe = escHTML(nome);
       const badge = (vezes !== null && vezes !== undefined)
-        ? `<span class="text-xs bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded-md flex-shrink-0" title="Vezes servidas">${parseInt(vezes)}&times;</span>`
+        ? `<span class="text-xs bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded-md flex-shrink-0" title="Vezes servidas">${parseInt(vezes)}×</span>`
         : '';
       return `<div class="flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-slate-800/50">
         <input type="checkbox" class="toggle-nome-escala w-4 h-4 accent-indigo-500 flex-shrink-0 cursor-pointer"
@@ -501,7 +501,7 @@
           const vezes = typeof item === 'object' && item !== null ? item.vezesServiu : null;
           const meta  = CAT_META[cat] || { emoji: '👤', cls: 'text-slate-400' };
           const badge = (vezes !== null && vezes !== undefined)
-            ? `<span class="text-xs bg-slate-700 text-slate-400 px-1 py-0.5 rounded flex-shrink-0">${parseInt(vezes)}&times;</span>` : '';
+            ? `<span class="text-xs bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded flex-shrink-0">${parseInt(vezes)}×</span>` : '';
           dispHtml += `<div class="flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-slate-800/50 disp-item">
             <span class="${meta.cls} text-xs flex-shrink-0">${meta.emoji}</span>
             <span class="text-sm text-slate-300 flex-1 truncate">${escHTML(nome)}</span>
@@ -548,9 +548,9 @@
     function adicionarSubstituto(nome, cat, vezes) {
       const listaFinal = document.getElementById('listaFinal');
       const meta = CAT_META[cat] || { emoji: '👤', cls: 'text-indigo-300' };
-      const id = 'esc_sub_' + Date.now();
+      const id = 'esc_sub_' + (++_escCnt);
       const badge = (vezes !== null && vezes !== undefined)
-        ? `<span class="text-xs bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded-md flex-shrink-0">${parseInt(vezes)}&times;</span>` : '';
+        ? `<span class="text-xs bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded-md flex-shrink-0">${parseInt(vezes)}×</span>` : '';
       const div = document.createElement('div');
       div.className = 'flex items-center gap-2 py-1 px-2 rounded-lg bg-indigo-900/30 hover:bg-indigo-900/50';
       div.innerHTML = `
@@ -590,7 +590,11 @@
         return;
       }
       abrirModal('Registrando serviço…');
-      await postJSON({ action: "registrarServico", missaId, nomes });
+      const resp = await postJSON({ action: "registrarServico", missaId, nomes });
+      if (resp && resp.error) {
+        atualizarModal('Erro ao registrar: ' + resp.error, 'erro');
+        return;
+      }
       atualizarModal(`✅ Serviço registrado para ${nomes.length} coroinha${nomes.length > 1 ? 's' : ''}!`, 'sucesso');
     }
 
